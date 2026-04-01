@@ -13,7 +13,7 @@
   --s2: #181916;
   --s3: #1f211d;
   --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.1);
+  --border2: rgba(255,255,255,0.11);
   --text: #e4e2db;
   --text2: #8a887f;
   --text3: #4a4845;
@@ -23,16 +23,16 @@
   --accent-b: rgba(29,158,117,0.25);
   --warn: #BA7517;
   --warn-dim: rgba(186,117,23,0.12);
-  --warn-b: rgba(186,117,23,0.25);
-  --red: #a33;
-  --red-dim: rgba(170,51,51,0.12);
+  --warn-b: rgba(186,117,23,0.3);
+  --red: #c44;
+  --red-dim: rgba(200,68,68,0.12);
   --font: 'DM Sans', sans-serif;
   --display: 'Syne', sans-serif;
   --mono: 'DM Mono', monospace;
 }
 html, body { height: 100%; overflow: hidden; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; }
 
-/* ── GATE SCREENS ── */
+/* ── GATE ── */
 .gate { position: fixed; inset: 0; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 100; }
 .gate-box { width: 100%; max-width: 400px; padding: 0 20px; animation: fadeUp 0.4s ease both; }
 @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
@@ -46,7 +46,7 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 .finp::placeholder { color: var(--text3); }
 .gbtn { width: 100%; padding: 11px; background: var(--accent); color: #fff; border: none; border-radius: 8px; font-family: var(--font); font-size: 14px; font-weight: 500; cursor: pointer; transition: opacity 0.15s; display: block; margin-bottom: 8px; }
 .gbtn:hover { opacity: 0.88; }
-.sbtn { width: 100%; padding: 10px; background: transparent; color: var(--text2); border: 1px solid var(--border2); border-radius: 8px; font-family: var(--font); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.15s; margin-bottom: 8px; }
+.sbtn { width: 100%; padding: 10px 14px; background: transparent; color: var(--text2); border: 1px solid var(--border2); border-radius: 8px; font-family: var(--font); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 10px; transition: all 0.15s; margin-bottom: 8px; }
 .sbtn:hover { background: var(--s2); }
 .sbtn svg { width: 16px; height: 16px; flex-shrink: 0; }
 .skip-btn { width: 100%; padding: 10px; background: transparent; color: var(--text3); border: 1px solid var(--border); border-radius: 8px; font-family: var(--font); font-size: 13px; cursor: pointer; margin-bottom: 8px; }
@@ -58,130 +58,137 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 .div-row { display: flex; align-items: center; gap: 8px; margin: 12px 0; }
 .div-line { flex: 1; height: 1px; background: var(--border); }
 .div-row span { font-size: 11px; color: var(--text3); }
-.gnote { font-size: 11px; color: var(--text3); text-align: center; margin-top: 10px; line-height: 1.5; }
 
-/* ── MAIN DASHBOARD ── */
+/* ── DASHBOARD ── */
 #dashboard { display: none; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
 
-/* TOP BAR */
-#topbar { display: flex; align-items: center; justify-content: space-between; padding: 10px 18px; background: var(--s1); border-bottom: 1px solid var(--border); flex-shrink: 0; }
-#topbar-left { display: flex; align-items: center; gap: 10px; }
-.tb-logo { font-family: var(--display); font-size: 15px; font-weight: 600; color: var(--text); letter-spacing: 0.02em; }
+/* TOPBAR */
+#topbar { display: flex; align-items: center; justify-content: space-between; padding: 9px 16px; background: var(--s1); border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 12px; }
+.tb-left { display: flex; align-items: center; gap: 10px; }
+.tb-logo { font-family: var(--display); font-size: 15px; font-weight: 600; color: var(--text); }
 .tb-date { font-size: 12px; color: var(--text3); font-family: var(--mono); }
-#topbar-right { display: flex; align-items: center; gap: 8px; }
-.pill-badge { font-size: 10px; padding: 2px 8px; border-radius: 20px; font-family: var(--mono); background: var(--accent-dim); color: var(--accent-l); border: 1px solid var(--accent-b); }
-.pill-badge.off { background: var(--s2); color: var(--text3); border-color: var(--border); }
+.tb-right { display: flex; align-items: center; gap: 8px; }
+
+/* Mode toggle */
+.mode-toggle { display: flex; background: var(--s2); border: 1px solid var(--border2); border-radius: 20px; padding: 2px; gap: 2px; }
+.mode-btn { font-size: 11px; padding: 3px 12px; border-radius: 18px; border: none; background: transparent; color: var(--text3); cursor: pointer; font-family: var(--mono); transition: all 0.15s; }
+.mode-btn.active-p { background: var(--accent-dim); color: var(--accent-l); }
+.mode-btn.active-w { background: var(--warn-dim); color: var(--warn); }
+
+/* Cal filter */
+.cal-filter { display: flex; gap: 3px; }
+.cf-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--mono); transition: all 0.15s; }
+.cf-btn.active { background: var(--accent-dim); color: var(--accent-l); border-color: var(--accent-b); }
 .lbtn { font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--font); text-decoration: underline; }
 .lbtn:hover { color: var(--text2); }
-.cal-filter { display: flex; gap: 4px; }
-.cf-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--text2); cursor: pointer; font-family: var(--mono); transition: all 0.15s; }
-.cf-btn.active { background: var(--accent-dim); color: var(--accent-l); border-color: var(--accent-b); }
 
 /* CALENDAR */
-#cal-section { flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--s1); }
-#cal-grid { display: grid; overflow-x: auto; }
-#cal-grid.week { grid-template-columns: repeat(7, 1fr); }
-#cal-grid.day { grid-template-columns: 1fr; }
-#cal-grid.month { grid-template-columns: repeat(7, 1fr); }
-.cal-col { border-right: 1px solid var(--border); padding: 8px 10px; min-width: 0; }
+#cal-section { flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--s1); overflow: hidden; }
+#cal-grid { display: grid; }
+.cal-col { border-right: 1px solid var(--border); padding: 7px 10px; min-width: 0; overflow: hidden; }
 .cal-col:last-child { border-right: none; }
-.cal-day-header { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 4px; }
-.cal-day-num { font-family: var(--display); font-size: 18px; font-weight: 600; color: var(--text2); margin-bottom: 6px; line-height: 1; }
-.cal-col.today .cal-day-num { color: var(--accent-l); }
+.cal-day-header { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+.cal-day-num { font-family: var(--display); font-size: 20px; font-weight: 600; color: var(--text3); margin-bottom: 5px; line-height: 1; }
+.cal-col.today .cal-day-num { color: var(--accent-l); background: var(--accent-dim); border-radius: 6px; display: inline-block; padding: 1px 7px; margin-left: -7px; }
 .cal-col.today .cal-day-header { color: var(--accent-l); }
-.cal-event { font-size: 11px; padding: 3px 7px; border-radius: 4px; margin-bottom: 3px; background: var(--accent-dim); border-left: 2px solid var(--accent); color: var(--accent-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: default; }
-.cal-event.work { background: var(--warn-dim); border-left-color: var(--warn); color: #d4951a; }
-.cal-empty { font-size: 11px; color: var(--text3); font-style: italic; }
-.cal-loading { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+.cal-event { font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-bottom: 2px; border-left: 2px solid var(--accent); background: var(--accent-dim); color: var(--accent-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-event.work { border-left-color: var(--warn); background: var(--warn-dim); color: #d4951a; }
+.cal-empty { font-size: 10px; color: var(--text3); font-style: italic; }
 
 /* EMAIL BANNER */
-#email-section { flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--s2); padding: 8px 0; }
-#email-header { display: flex; align-items: center; gap: 8px; padding: 0 16px 6px; }
-.email-title { font-size: 11px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
-.email-refresh { font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--mono); text-decoration: underline; }
-#email-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 16px; scrollbar-width: none; }
+#email-section { flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--s2); }
+#email-header { display: flex; align-items: center; gap: 8px; padding: 6px 14px 4px; }
+.email-title { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.email-refresh { font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--mono); text-decoration: underline; padding: 0; }
+.email-refresh:hover { color: var(--text2); }
+#email-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 0 14px 8px; scrollbar-width: none; }
 #email-scroll::-webkit-scrollbar { display: none; }
-.email-card { flex-shrink: 0; width: 260px; background: var(--s1); border: 1px solid var(--border); border-radius: 8px; padding: 9px 12px; cursor: pointer; transition: border-color 0.15s; }
+.email-card { flex-shrink: 0; width: 240px; background: var(--s1); border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px; cursor: pointer; transition: border-color 0.15s; }
 .email-card:hover { border-color: var(--border2); }
-.email-card.needs-reply { border-left: 2px solid var(--warn); }
-.email-card.needs-reply-flag { border-left: 2px solid var(--red); }
-.email-from { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.email-subj { font-size: 11px; color: var(--text2); margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.email-card.flagged { border-left: 2px solid var(--warn); }
+.email-from { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.email-subj { font-size: 11px; color: var(--text2); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .email-preview { font-size: 10px; color: var(--text3); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.email-tag { font-size: 9px; padding: 1px 6px; border-radius: 10px; display: inline-block; margin-top: 4px; font-family: var(--mono); }
-.email-tag.reply { background: var(--warn-dim); color: var(--warn); border: 1px solid var(--warn-b); }
-.email-tag.urgent { background: var(--red-dim); color: var(--red); border: 1px solid rgba(170,51,51,0.25); }
-.email-loading { font-size: 12px; color: var(--text3); padding: 0 4px; align-self: center; }
+.email-tag { font-size: 9px; padding: 1px 6px; border-radius: 10px; display: inline-block; margin-top: 3px; font-family: var(--mono); background: var(--warn-dim); color: var(--warn); border: 1px solid var(--warn-b); }
+.email-loading { font-size: 12px; color: var(--text3); padding: 4px 0; align-self: center; }
 
-/* BOTTOM SPLIT */
-#bottom { display: flex; flex: 1; overflow: hidden; }
+/* BOTTOM */
+#bottom { display: flex; flex: 1; overflow: hidden; min-height: 0; }
 
-/* TODO */
-#todo-section { width: 340px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--s1); }
-#todo-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
-.section-title { font-family: var(--display); font-size: 13px; font-weight: 600; color: var(--text); letter-spacing: 0.02em; }
+/* TASKS */
+#todo-section { width: 420px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--s1); }
+#todo-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; gap: 8px; }
+.section-title { font-family: var(--display); font-size: 13px; font-weight: 600; color: var(--text); }
 .todo-counts { font-size: 11px; color: var(--text3); font-family: var(--mono); }
-#todo-filter { display: flex; gap: 4px; padding: 8px 16px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#quick-add { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#quick-inp { flex: 1; background: var(--s2); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 10px; font-family: var(--font); font-size: 12px; color: var(--text); outline: none; transition: border-color 0.15s; }
+#quick-inp:focus { border-color: var(--accent); }
+#quick-inp::placeholder { color: var(--text3); }
+#quick-add-btn { padding: 6px 10px; background: var(--accent-dim); border: 1px solid var(--accent-b); border-radius: 6px; color: var(--accent-l); font-size: 12px; cursor: pointer; font-family: var(--font); transition: all 0.15s; white-space: nowrap; }
+#quick-add-btn:hover { background: var(--accent); color: #fff; }
+#todo-filter { display: flex; gap: 4px; padding: 7px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
 .tf-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--mono); transition: all 0.15s; }
 .tf-btn.active { background: var(--accent-dim); color: var(--accent-l); border-color: var(--accent-b); }
-#todo-list { flex: 1; overflow-y: auto; padding: 10px 12px; }
+#todo-list { flex: 1; overflow-y: auto; padding: 8px 10px; }
 #todo-list::-webkit-scrollbar { width: 3px; }
 #todo-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-.project-group { margin-bottom: 14px; }
-.project-label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; padding: 0 4px; }
-.task-item { display: flex; align-items: flex-start; gap: 8px; padding: 7px 8px; border-radius: 6px; margin-bottom: 3px; transition: background 0.15s; cursor: default; }
-.task-item:hover { background: var(--s2); }
-.task-item.done { opacity: 0.4; }
+.project-group { margin-bottom: 12px; }
+.project-label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; padding: 0 4px; }
+.task-item { border-radius: 7px; margin-bottom: 3px; border: 1px solid transparent; transition: all 0.15s; overflow: hidden; }
+.task-item:hover { background: var(--s2); border-color: var(--border); }
+.task-item.done { opacity: 0.38; }
+.task-main { display: flex; align-items: flex-start; gap: 8px; padding: 7px 8px 4px; }
 .task-cb { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--border2); flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
 .task-cb:hover { border-color: var(--accent); }
 .task-cb.checked { background: var(--accent); border-color: var(--accent); }
-.task-cb.checked::after { content: ''; width: 5px; height: 3px; border-left: 1.5px solid #fff; border-bottom: 1.5px solid #fff; transform: rotate(-45deg) translateY(-1px); display: block; }
+.task-cb.checked::after { content:''; width:5px; height:3px; border-left:1.5px solid #fff; border-bottom:1.5px solid #fff; transform:rotate(-45deg) translateY(-1px); display:block; }
 .task-body { flex: 1; min-width: 0; }
 .task-text { font-size: 13px; color: var(--text); line-height: 1.4; }
 .task-item.done .task-text { text-decoration: line-through; color: var(--text3); }
-.task-meta { display: flex; align-items: center; gap: 5px; margin-top: 3px; }
+.task-meta { display: flex; align-items: center; gap: 5px; margin-top: 2px; }
 .priority-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
-.p-high { background: #a33; }
+.p-high { background: var(--red); }
 .p-med { background: var(--warn); }
 .p-low { background: var(--text3); }
-.task-proj { font-size: 10px; color: var(--text3); font-family: var(--mono); }
-.todo-empty { font-size: 13px; color: var(--text3); text-align: center; padding: 30px 16px; line-height: 1.6; }
+.task-proj-tag { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.task-note-area { padding: 0 8px 6px 30px; }
+.task-note { width: 100%; background: transparent; border: none; border-top: 1px solid var(--border); padding: 4px 0; font-family: var(--font); font-size: 11px; color: var(--text2); outline: none; resize: none; line-height: 1.5; min-height: 0; display: none; }
+.task-note::placeholder { color: var(--text3); }
+.task-note.visible { display: block; }
+.task-note-toggle { font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--mono); padding: 0; transition: color 0.15s; }
+.task-note-toggle:hover { color: var(--text2); }
+.todo-empty { font-size: 13px; color: var(--text3); text-align: center; padding: 28px 16px; line-height: 1.7; }
 
 /* CHAT */
-#chat-section { flex: 1; display: flex; flex-direction: column; background: var(--bg); }
-#chat-header { padding: 12px 16px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; background: var(--s1); }
-.chat-av { width: 24px; height: 24px; border-radius: 50%; background: var(--accent-dim); border: 1px solid var(--accent-b); display: flex; align-items: center; justify-content: center; font-size: 10px; color: var(--accent-l); font-weight: 500; }
+#chat-section { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
+#chat-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; background: var(--s1); }
+.chat-av { width: 22px; height: 22px; border-radius: 50%; background: var(--accent-dim); border: 1px solid var(--accent-b); display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--accent-l); font-weight: 500; }
 .chat-status { font-size: 12px; color: var(--text2); }
-#messages { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; scroll-behavior: smooth; }
+#messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
 #messages::-webkit-scrollbar { width: 3px; }
 #messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
-.msg-row { display: flex; gap: 8px; align-items: flex-start; }
-.msg-row.user { flex-direction: row-reverse; align-self: flex-end; max-width: 82%; }
-.msg-row.ai { max-width: 88%; }
-.msg-av { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+.msg-row { display: flex; gap: 7px; align-items: flex-start; }
+.msg-row.user { flex-direction: row-reverse; align-self: flex-end; max-width: 84%; }
+.msg-row.ai { max-width: 90%; }
+.msg-av { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
 .msg-av.ai { background: var(--accent-dim); color: var(--accent-l); border: 1px solid var(--accent-b); }
 .msg-av.user { background: var(--s3); color: var(--text2); border: 1px solid var(--border2); }
-.msg-bub { padding: 9px 12px; border-radius: 14px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+.msg-bub { padding: 8px 11px; border-radius: 13px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
 .msg-row.ai .msg-bub { background: var(--s2); border: 1px solid var(--border); color: var(--text); border-top-left-radius: 3px; }
 .msg-row.user .msg-bub { background: var(--accent); color: #fff; border-top-right-radius: 3px; }
-.msg-ts { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 3px; padding: 0 3px; }
+.msg-ts { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 2px; padding: 0 3px; }
 .msg-row.user .msg-ts { text-align: right; }
-.typing-bub { padding: 10px 14px; display: flex; gap: 4px; align-items: center; }
+.typing-bub { padding: 9px 13px; display: flex; gap: 4px; align-items: center; }
 .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text3); animation: pulse 1.2s infinite; }
 .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
 @keyframes pulse{0%,60%,100%{opacity:.3;transform:scale(1)}30%{opacity:1;transform:scale(1.3)}}
-#composer { padding: 10px 12px; border-top: 1px solid var(--border); display: flex; gap: 8px; align-items: flex-end; background: var(--s1); flex-shrink: 0; }
-#msg-inp { flex: 1; resize: none; background: var(--s2); border: 1px solid var(--border2); border-radius: 10px; padding: 8px 12px; font-family: var(--font); font-size: 13px; color: var(--text); outline: none; max-height: 100px; overflow-y: auto; line-height: 1.5; transition: border-color 0.15s; }
+#composer { padding: 9px 11px; border-top: 1px solid var(--border); display: flex; gap: 7px; align-items: flex-end; background: var(--s1); flex-shrink: 0; }
+#msg-inp { flex: 1; resize: none; background: var(--s2); border: 1px solid var(--border2); border-radius: 10px; padding: 8px 11px; font-family: var(--font); font-size: 13px; color: var(--text); outline: none; max-height: 100px; overflow-y: auto; line-height: 1.5; transition: border-color 0.15s; }
 #msg-inp:focus { border-color: var(--accent); }
 #msg-inp::placeholder { color: var(--text3); }
-#send-btn { width: 32px; height: 32px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.15s; }
+#send-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.15s; }
 #send-btn:hover { opacity: 0.85; }
-#send-btn svg { width: 13px; height: 13px; fill: white; }
-
-@media (max-width: 700px) {
-  #todo-section { width: 100%; border-right: none; border-bottom: 1px solid var(--border); max-height: 40vh; }
-  #bottom { flex-direction: column; }
-}
+#send-btn svg { width: 12px; height: 12px; fill: white; }
 </style>
 </head>
 <body>
@@ -191,11 +198,10 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
   <div class="gate-box">
     <div class="gate-logo">✦</div>
     <h1>CJ's Assistant</h1>
-    <p>Enter your Anthropic API key to get started.<br><a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></p>
-    <div class="flabel">Anthropic API key</div>
+    <p>Enter your Anthropic API key.<br><a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></p>
+    <div class="flabel">API key</div>
     <input id="key-inp" class="finp" type="password" placeholder="sk-ant-..." autocomplete="off"/>
     <button class="gbtn" id="key-btn">Continue</button>
-    <p class="gnote">Stored locally in your browser only.</p>
   </div>
 </div>
 
@@ -204,7 +210,7 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
   <div class="gate-box">
     <div class="gate-logo">✦</div>
     <h1>Connect Google</h1>
-    <p>Connect your accounts for Gmail and Calendar access.</p>
+    <p>Connect your accounts for Gmail and Calendar.</p>
     <div class="status-row">
       <div class="sbadge" id="badge-p"><div class="sbadge-dot"></div>Personal</div>
       <div class="sbadge" id="badge-w"><div class="sbadge-dot"></div>Work (CZ)</div>
@@ -226,26 +232,28 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 <!-- DASHBOARD -->
 <div id="dashboard">
 
-  <!-- TOP BAR -->
+  <!-- TOPBAR -->
   <div id="topbar">
-    <div id="topbar-left">
+    <div class="tb-left">
       <span class="tb-logo">CJ</span>
       <span class="tb-date" id="tb-date"></span>
     </div>
-    <div id="topbar-right">
+    <div class="tb-right">
+      <div class="mode-toggle">
+        <button class="mode-btn active-p" id="mode-p">Personal</button>
+        <button class="mode-btn" id="mode-w">Work</button>
+      </div>
       <div class="cal-filter">
         <button class="cf-btn active" data-view="week">Week</button>
         <button class="cf-btn" data-view="day">Day</button>
       </div>
-      <div class="pill-badge off" id="pill-p">Personal</div>
-      <div class="pill-badge off" id="pill-w">Work</div>
       <button class="lbtn" id="so-btn">sign out</button>
     </div>
   </div>
 
   <!-- CALENDAR -->
   <div id="cal-section">
-    <div id="cal-grid" class="week"></div>
+    <div id="cal-grid"></div>
   </div>
 
   <!-- EMAIL BANNER -->
@@ -254,24 +262,27 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
       <span class="email-title">Inbox</span>
       <button class="email-refresh" id="email-refresh-btn">refresh</button>
     </div>
-    <div id="email-scroll">
-      <span class="email-loading">Loading email...</span>
-    </div>
+    <div id="email-scroll"><span class="email-loading">Loading...</span></div>
   </div>
 
   <!-- BOTTOM -->
   <div id="bottom">
 
-    <!-- TODO -->
+    <!-- TASKS -->
     <div id="todo-section">
       <div id="todo-header">
         <span class="section-title">Tasks</span>
-        <span class="todo-counts" id="todo-counts"></span>
+        <span class="todo-counts" id="todo-counts">0 left</span>
+      </div>
+      <div id="quick-add">
+        <input id="quick-inp" placeholder="Quick add a task..." />
+        <button id="quick-add-btn">+ Add</button>
       </div>
       <div id="todo-filter">
         <button class="tf-btn active" data-f="all">All</button>
         <button class="tf-btn" data-f="today">Today</button>
         <button class="tf-btn" data-f="high">High</button>
+        <button class="tf-btn" data-f="done">Done</button>
       </div>
       <div id="todo-list"></div>
     </div>
@@ -297,42 +308,42 @@ html, body { height: 100%; overflow: hidden; font-family: var(--font); backgroun
 var PROXY = "https://cjs-pa.cjmitchell292.workers.dev";
 var CLIENT_ID = "887982151932-95rtd5jkk97ua175n9hjvc5gqg10uaoq.apps.googleusercontent.com";
 var SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly";
-
-var SYSTEM = `You are CJ's personal AI assistant embedded in a personal dashboard.
+var SYSTEM = `You are CJ's personal AI assistant embedded in a productivity dashboard.
 
 CJ's context:
-- Contractor at Campaign Zero (criminal justice nonprofit), email cj@campaignzero.org. Manager is Jaren (on sabbatical). CJ has taken lead on major programs.
+- Contractor at Campaign Zero (criminal justice nonprofit), email cj@campaignzero.org. Manager Jaren is on sabbatical; CJ has taken lead on major programs.
 - Co-founder/CEO of KnoVo (civic tech startup for 2026 midterms). Team: Dan (engineer), Rogan (TikTok/research).
-- Currently wrapping up Cuyahoga Spring Break Series (5-day speaker program at juvenile detention center).
+- Currently wrapping up the Cuyahoga Spring Break Series (5-day speaker program at juvenile detention center).
+- Michael O.D. Brown Memorial Scholarship outreach (St. Louis-area high schools).
 - Side idea: pickup basketball app for Chicago.
 - Personal: former college basketball player, boxes, planted 14-gallon aquarium, follows NCAA basketball.
 
-Known projects: Campaign Zero, KnoVo, Cuyahoga Spring Break Series, Michael O.D. Brown Scholarship, Basketball App (idea).
+Known projects: Campaign Zero, KnoVo, Cuyahoga Spring Break Series, Michael O.D. Brown Scholarship, Basketball App.
 
-TASK PARSING: When CJ pastes a list of tasks (from Slack, text, etc.), parse them into structured tasks. For each task respond with a JSON block like:
+TASK PARSING: When CJ pastes a list of tasks (from Slack, text, etc.), parse them into structured JSON like this:
 <tasks>
 [{"text":"task description","project":"Project Name","priority":"high|med|low","today":true|false}]
 </tasks>
-Then give a brief natural language summary of what you parsed and why you prioritized the way you did.
+Then give a brief natural language summary of what you parsed and your prioritization reasoning. Assign projects based on context clues. Default project is "General". Priority reasoning: deadlines = high, people waiting = high, KnoVo/CZ programs = high, admin/low stakes = low.
 
-PROJECT BRIEFING: When CJ says "let me tell you about a project" or similar, store that context and use it for future prioritization.
+PROJECT BRIEFING: When CJ describes a new project, acknowledge it and confirm you've noted it for future prioritization.
 
-For all other messages: be direct, warm, concise. Reference CJ's projects naturally. Under 120 words unless more detail is asked. When Gmail or Calendar data is injected, use it for real specific answers.`;
+For other queries: direct, warm, concise. Under 120 words unless more is asked. When Gmail or Calendar data is injected, use it for specific actionable answers. Reference CJ's world naturally.`;
 
 var apiKey = "";
 var tokP = "";
 var tokW = "";
-var chatHistory = [];
-var tasks = [];
+var mode = "p"; // "p" = personal, "w" = work
 var calView = "week";
 var todoFilter = "all";
+var tasks = [];
+var chatHistory = [];
 var isBusy = false;
 
 // ── STORAGE ──
-function saveTasks() { localStorage.setItem("cj_tasks", JSON.stringify(tasks)); }
+function saveTasks() { try { localStorage.setItem("cj_tasks_v2", JSON.stringify(tasks)); } catch(e){} }
 function loadTasks() {
-  try { tasks = JSON.parse(localStorage.getItem("cj_tasks") || "[]"); } catch(e) { tasks = []; }
-  // Roll over incomplete tasks from previous days (keep them, just mark date)
+  try { tasks = JSON.parse(localStorage.getItem("cj_tasks_v2") || "[]"); } catch(e) { tasks = []; }
   renderTasks();
 }
 
@@ -355,7 +366,7 @@ function showGate(id) {
 // ── KEY ──
 document.getElementById("key-btn").addEventListener("click", function() {
   var val = document.getElementById("key-inp").value.trim();
-  if (!val || val.length < 10) { document.getElementById("key-inp").style.borderColor = "#a33"; return; }
+  if (!val || val.length < 10) { document.getElementById("key-inp").style.borderColor = "#c44"; return; }
   apiKey = val;
   localStorage.setItem("asst_key", val);
   showGate("gate-google");
@@ -386,28 +397,32 @@ document.getElementById("so-btn").addEventListener("click", function() {
   showGate("gate-google");
 });
 
+// ── MODE TOGGLE ──
+document.getElementById("mode-p").addEventListener("click", function() { setMode("p"); });
+document.getElementById("mode-w").addEventListener("click", function() { setMode("w"); });
+
+function setMode(m) {
+  mode = m;
+  document.getElementById("mode-p").className = "mode-btn" + (m === "p" ? " active-p" : "");
+  document.getElementById("mode-w").className = "mode-btn" + (m === "w" ? " active-w" : "");
+  document.getElementById("chat-status").textContent = m === "p" ? "Personal mode" : "Work mode (CZ)";
+  renderCalendar();
+  loadEmails();
+}
+
+function activeToken() { return mode === "p" ? tokP : tokW; }
+
 // ── LAUNCH ──
 function launchDashboard() {
   document.getElementById("gate-key").style.display = "none";
   document.getElementById("gate-google").style.display = "none";
   document.getElementById("dashboard").style.display = "flex";
-
-  if (tokP) { document.getElementById("pill-p").classList.remove("off"); }
-  if (tokW) { document.getElementById("pill-w").classList.remove("off"); }
-
-  var parts = [];
-  if (tokP) parts.push("personal");
-  if (tokW) parts.push("work");
-  document.getElementById("chat-status").textContent = parts.length ? parts.join(" + ") + " connected" : "No Google";
-
   setTopbarDate();
-  renderCalendar();
-  loadEmails();
+  setMode("p");
   loadTasks();
   if (document.getElementById("messages").children.length === 0) addWelcome();
 }
 
-// ── TOPBAR DATE ──
 function setTopbarDate() {
   var d = new Date();
   document.getElementById("tb-date").textContent = d.toLocaleDateString([], {weekday:"long", month:"long", day:"numeric"});
@@ -425,8 +440,7 @@ document.querySelectorAll(".cf-btn").forEach(function(btn) {
 
 async function renderCalendar() {
   var grid = document.getElementById("cal-grid");
-  grid.className = "cal-grid " + calView;
-  grid.innerHTML = "";
+  grid.innerHTML = '<div style="padding:10px 14px;font-size:11px;color:var(--text3);font-family:var(--mono);">Loading calendar...</div>';
 
   var today = new Date();
   var days = [];
@@ -435,7 +449,6 @@ async function renderCalendar() {
     days = [new Date(today)];
     grid.style.gridTemplateColumns = "1fr";
   } else {
-    // week: Mon–Sun
     var dow = today.getDay();
     var monday = new Date(today);
     monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
@@ -447,7 +460,11 @@ async function renderCalendar() {
     grid.style.gridTemplateColumns = "repeat(7, 1fr)";
   }
 
-  var events = await fetchCalendarRange(days[0], days[days.length - 1]);
+  var tok = activeToken();
+  var events = tok ? await fetchCalEvents(tok, days[0], days[days.length - 1]) : [];
+
+  grid.innerHTML = "";
+  grid.style.display = "grid";
 
   days.forEach(function(day) {
     var col = document.createElement("div");
@@ -455,99 +472,88 @@ async function renderCalendar() {
     var isToday = day.toDateString() === today.toDateString();
     if (isToday) col.classList.add("today");
 
-    var header = document.createElement("div");
-    header.className = "cal-day-header";
-    header.textContent = day.toLocaleDateString([], {weekday:"short"});
-
-    var num = document.createElement("div");
-    num.className = "cal-day-num";
+    var hdr = document.createElement("div"); hdr.className = "cal-day-header";
+    hdr.textContent = day.toLocaleDateString([], {weekday:"short"});
+    var num = document.createElement("div"); num.className = "cal-day-num";
     num.textContent = day.getDate();
+    col.appendChild(hdr); col.appendChild(num);
 
-    col.appendChild(header);
-    col.appendChild(num);
-
-    var dayEvents = events.filter(function(e) {
-      var eDate = new Date(e.start.dateTime || e.start.date);
-      return eDate.toDateString() === day.toDateString();
+    var dayEvts = events.filter(function(e) {
+      var s = new Date(e.start.dateTime || e.start.date);
+      return s.toDateString() === day.toDateString();
     });
 
-    if (dayEvents.length === 0) {
-      var empty = document.createElement("div");
-      empty.className = "cal-empty";
-      empty.textContent = "free";
-      col.appendChild(empty);
+    if (dayEvts.length === 0) {
+      var em = document.createElement("div"); em.className = "cal-empty"; em.textContent = "free";
+      col.appendChild(em);
     } else {
-      dayEvents.slice(0, 4).forEach(function(e) {
+      dayEvts.slice(0, 4).forEach(function(e) {
         var ev = document.createElement("div");
-        var isWork = e.organizer && e.organizer.email && e.organizer.email.includes("campaignzero");
-        ev.className = "cal-event" + (isWork ? " work" : "");
-        var t = e.start.dateTime ? new Date(e.start.dateTime).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) : "All day";
-        ev.textContent = t + " " + (e.summary || "Event");
-        ev.title = (e.summary || "Event");
+        ev.className = "cal-event";
+        var t = e.start.dateTime ? new Date(e.start.dateTime).toLocaleTimeString([], {hour:"numeric", minute:"2-digit"}) : "";
+        ev.textContent = (t ? t + " " : "") + (e.summary || "Event");
+        ev.title = e.summary || "Event";
         col.appendChild(ev);
       });
+      if (dayEvts.length > 4) {
+        var more = document.createElement("div"); more.className = "cal-empty";
+        more.textContent = "+" + (dayEvts.length - 4) + " more";
+        col.appendChild(more);
+      }
     }
     grid.appendChild(col);
   });
 }
 
-async function fetchCalendarRange(start, end) {
-  var allEvents = [];
-  var endOfEnd = new Date(end);
-  endOfEnd.setHours(23, 59, 59);
-
-  async function fetchFor(token) {
-    try {
-      var r = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=" + encodeURIComponent(start.toISOString()) + "&timeMax=" + encodeURIComponent(endOfEnd.toISOString()) + "&maxResults=50&singleEvents=true&orderBy=startTime", { headers: { Authorization: "Bearer " + token } });
-      var d = await r.json();
-      return d.items || [];
-    } catch(e) { return []; }
-  }
-
-  if (tokP) allEvents = allEvents.concat(await fetchFor(tokP));
-  if (tokW) allEvents = allEvents.concat(await fetchFor(tokW));
-  return allEvents;
+async function fetchCalEvents(token, start, end) {
+  try {
+    var endOfEnd = new Date(end); endOfEnd.setHours(23,59,59);
+    var r = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=" + encodeURIComponent(start.toISOString()) + "&timeMax=" + encodeURIComponent(endOfEnd.toISOString()) + "&maxResults=50&singleEvents=true&orderBy=startTime", { headers: { Authorization: "Bearer " + token } });
+    var d = await r.json();
+    return d.items || [];
+  } catch(e) { return []; }
 }
 
 // ── EMAIL ──
 async function loadEmails() {
   var scroll = document.getElementById("email-scroll");
   scroll.innerHTML = '<span class="email-loading">Loading...</span>';
-  var cards = [];
-  if (tokP) cards = cards.concat(await fetchEmailCards(tokP, "personal"));
-  if (tokW) cards = cards.concat(await fetchEmailCards(tokW, "work"));
-  if (!tokP && !tokW) { scroll.innerHTML = '<span class="email-loading">No Google account connected.</span>'; return; }
+  var tok = activeToken();
+  if (!tok) { scroll.innerHTML = '<span class="email-loading">Connect Google to see email.</span>'; return; }
+  var cards = await fetchEmailCards(tok);
   if (cards.length === 0) { scroll.innerHTML = '<span class="email-loading">No unread emails.</span>'; return; }
   scroll.innerHTML = "";
   cards.forEach(function(c) {
     var card = document.createElement("div");
-    card.className = "email-card" + (c.needsReply ? " needs-reply" : "");
+    card.className = "email-card" + (c.flagged ? " flagged" : "");
     card.innerHTML =
-      '<div class="email-from">' + escHtml(c.from) + '</div>' +
-      '<div class="email-subj">' + escHtml(c.subject) + '</div>' +
-      '<div class="email-preview">' + escHtml(c.snippet) + '</div>' +
-      (c.needsReply ? '<span class="email-tag reply">needs reply</span>' : '');
+      '<div class="email-from">' + esc(c.from) + '</div>' +
+      '<div class="email-subj">' + esc(c.subject) + '</div>' +
+      '<div class="email-preview">' + esc(c.snippet) + '</div>' +
+      (c.flagged ? '<span class="email-tag">needs reply</span>' : '');
     card.addEventListener("click", function() {
-      document.getElementById("msg-inp").value = 'Tell me more about this email: "' + c.subject + '" from ' + c.from;
+      document.getElementById("msg-inp").value = 'Help me with this email — subject: "' + c.subject + '" from ' + c.from + '. Snippet: ' + c.snippet.substring(0,120);
       document.getElementById("msg-inp").focus();
     });
     scroll.appendChild(card);
   });
 }
 
-async function fetchEmailCards(token, label) {
+async function fetchEmailCards(token) {
   try {
-    var r = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=8&q=is:unread", { headers: { Authorization: "Bearer " + token } });
+    // Filter out newsletters/promos, get person-to-person first
+    var r = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=15&q=is:unread -category:promotions -category:updates -category:social", { headers: { Authorization: "Bearer " + token } });
     var d = await r.json();
-    if (!d.messages) return [];
-    var cards = await Promise.all(d.messages.slice(0, 7).map(async function(m) {
+    if (!d.messages || !d.messages.length) return [];
+    var cards = await Promise.all(d.messages.slice(0,8).map(async function(m) {
       var mr = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/" + m.id + "?format=metadata&metadataHeaders=From&metadataHeaders=Subject&metadataHeaders=Date", { headers: { Authorization: "Bearer " + token } });
       var md = await mr.json();
-      var h = {};
-      ((md.payload && md.payload.headers) || []).forEach(function(x) { h[x.name] = x.value; });
-      // Heuristic: needs reply if subject starts with Re: or Fwd: and is unread
-      var needsReply = /^(Re:|Fwd:)/i.test(h.Subject || "");
-      return { from: cleanFrom(h.From || "?"), subject: h.Subject || "(no subject)", snippet: md.snippet || "", needsReply: needsReply, label: label };
+      var h = {}; ((md.payload && md.payload.headers)||[]).forEach(function(x){h[x.name]=x.value;});
+      var snippet = decodeHtmlEntities(md.snippet || "");
+      // Flag as needs reply: thread-like subjects or has been read before (heuristic)
+      var subj = h.Subject || "";
+      var flagged = /^(Re:|Fwd:|RE:|FW:)/i.test(subj) || snippet.toLowerCase().includes("waiting") || snippet.toLowerCase().includes("let me know") || snippet.toLowerCase().includes("can you");
+      return { from: cleanFrom(h.From || "?"), subject: subj || "(no subject)", snippet: snippet, flagged: flagged };
     }));
     return cards;
   } catch(e) { return []; }
@@ -559,7 +565,12 @@ function cleanFrom(from) {
   var m = from.match(/^"?([^"<]+)"?\s*</);
   return m ? m[1].trim() : from.replace(/<[^>]+>/, "").trim();
 }
-function escHtml(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+function decodeHtmlEntities(str) {
+  var txt = document.createElement("textarea");
+  txt.innerHTML = str;
+  return txt.value;
+}
+function esc(s) { return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
 
 // ── TASKS ──
 function renderTasks() {
@@ -569,81 +580,85 @@ function renderTasks() {
   var filtered = tasks.filter(function(t) {
     if (todoFilter === "today") return t.today && !t.done;
     if (todoFilter === "high") return t.priority === "high" && !t.done;
-    return true;
+    if (todoFilter === "done") return t.done;
+    return !t.done || todoFilter === "all";
   });
 
-  var done = tasks.filter(function(t) { return t.done; }).length;
-  document.getElementById("todo-counts").textContent = (tasks.length - done) + " left";
+  var openCount = tasks.filter(function(t) { return !t.done; }).length;
+  document.getElementById("todo-counts").textContent = openCount + " left";
 
   if (filtered.length === 0) {
-    list.innerHTML = '<div class="todo-empty">No tasks yet.\nPaste a list in chat and I\'ll organize it.</div>';
+    list.innerHTML = '<div class="todo-empty">No tasks here.\nPaste a list in chat and I\'ll organize it.</div>';
     return;
   }
 
-  // Group by project
   var groups = {};
   filtered.forEach(function(t) {
-    var proj = t.project || "General";
-    if (!groups[proj]) groups[proj] = [];
-    groups[proj].push(t);
+    var p = t.project || "General";
+    if (!groups[p]) groups[p] = [];
+    groups[p].push(t);
   });
 
-  // Sort projects: Campaign Zero, KnoVo first
-  var order = ["Campaign Zero", "KnoVo", "Cuyahoga Spring Break Series", "Michael O.D. Brown Scholarship", "General"];
-  var projKeys = Object.keys(groups).sort(function(a, b) {
-    var ai = order.indexOf(a); var bi = order.indexOf(b);
-    if (ai === -1) ai = 99; if (bi === -1) bi = 99;
-    return ai - bi;
+  var order = ["Campaign Zero","KnoVo","Cuyahoga Spring Break Series","Michael O.D. Brown Scholarship","General"];
+  var keys = Object.keys(groups).sort(function(a,b) {
+    var ai = order.indexOf(a), bi = order.indexOf(b);
+    return (ai < 0 ? 99 : ai) - (bi < 0 ? 99 : bi);
   });
 
-  projKeys.forEach(function(proj) {
-    var group = document.createElement("div");
-    group.className = "project-group";
-    var label = document.createElement("div");
-    label.className = "project-label";
-    label.textContent = proj;
-    group.appendChild(label);
+  var pOrd = {high:0,med:1,low:2};
+  keys.forEach(function(proj) {
+    var grp = document.createElement("div"); grp.className = "project-group";
+    var lbl = document.createElement("div"); lbl.className = "project-label"; lbl.textContent = proj;
+    grp.appendChild(lbl);
 
-    // Sort by priority within group
-    var pOrder = {high:0, med:1, low:2};
-    groups[proj].sort(function(a,b) { return (pOrder[a.priority]||1) - (pOrder[b.priority]||1); });
+    groups[proj].sort(function(a,b) { return (pOrd[a.priority]||1)-(pOrd[b.priority]||1); });
 
     groups[proj].forEach(function(task) {
       var item = document.createElement("div");
       item.className = "task-item" + (task.done ? " done" : "");
 
+      // Main row
+      var main = document.createElement("div"); main.className = "task-main";
       var cb = document.createElement("div");
       cb.className = "task-cb" + (task.done ? " checked" : "");
-      cb.addEventListener("click", function() {
-        task.done = !task.done;
-        saveTasks();
-        renderTasks();
+      cb.addEventListener("click", function(e) { e.stopPropagation(); task.done = !task.done; saveTasks(); renderTasks(); });
+
+      var body = document.createElement("div"); body.className = "task-body";
+      var txt = document.createElement("div"); txt.className = "task-text"; txt.textContent = task.text;
+      var meta = document.createElement("div"); meta.className = "task-meta";
+      var dot = document.createElement("div"); dot.className = "priority-dot p-" + (task.priority || "low");
+      var tag = document.createElement("span"); tag.className = "task-proj-tag"; tag.textContent = task.priority || "low";
+
+      // Note toggle
+      var noteToggle = document.createElement("button"); noteToggle.className = "task-note-toggle";
+      noteToggle.textContent = task.note ? "note ▾" : "+ note";
+
+      meta.appendChild(dot); meta.appendChild(tag); meta.appendChild(noteToggle);
+      body.appendChild(txt); body.appendChild(meta);
+      main.appendChild(cb); main.appendChild(body);
+      item.appendChild(main);
+
+      // Note area
+      var noteArea = document.createElement("div"); noteArea.className = "task-note-area";
+      var noteInp = document.createElement("textarea");
+      noteInp.className = "task-note" + (task.note ? " visible" : "");
+      noteInp.placeholder = "Add notes...";
+      noteInp.value = task.note || "";
+      noteInp.rows = 2;
+      noteInp.addEventListener("input", function() { task.note = noteInp.value; saveTasks(); });
+      noteArea.appendChild(noteInp);
+      item.appendChild(noteArea);
+
+      noteToggle.addEventListener("click", function(e) {
+        e.stopPropagation();
+        var visible = noteInp.classList.toggle("visible");
+        noteToggle.textContent = visible ? "note ▴" : (task.note ? "note ▾" : "+ note");
+        if (visible) noteInp.focus();
       });
 
-      var body = document.createElement("div");
-      body.className = "task-body";
-
-      var text = document.createElement("div");
-      text.className = "task-text";
-      text.textContent = task.text;
-
-      var meta = document.createElement("div");
-      meta.className = "task-meta";
-      var dot = document.createElement("div");
-      dot.className = "priority-dot p-" + (task.priority || "low");
-      var projSpan = document.createElement("span");
-      projSpan.className = "task-proj";
-      projSpan.textContent = task.priority || "low";
-      meta.appendChild(dot);
-      meta.appendChild(projSpan);
-
-      body.appendChild(text);
-      body.appendChild(meta);
-      item.appendChild(cb);
-      item.appendChild(body);
-      group.appendChild(item);
+      grp.appendChild(item);
     });
-    list.appendChild(group);
+    list.appendChild(grp);
   });
 }
 
@@ -656,12 +671,23 @@ document.querySelectorAll(".tf-btn").forEach(function(btn) {
   });
 });
 
+// Quick add
+document.getElementById("quick-add-btn").addEventListener("click", quickAdd);
+document.getElementById("quick-inp").addEventListener("keydown", function(e) { if (e.key === "Enter") quickAdd(); });
+function quickAdd() {
+  var inp = document.getElementById("quick-inp");
+  var val = inp.value.trim();
+  if (!val) return;
+  tasks.push({ id: Date.now(), text: val, project: "General", priority: "med", today: false, done: false, note: "", created: new Date().toISOString() });
+  saveTasks(); renderTasks();
+  inp.value = "";
+}
+
 function addTasksFromJSON(arr) {
   arr.forEach(function(t) {
-    tasks.push({ id: Date.now() + Math.random(), text: t.text, project: t.project || "General", priority: t.priority || "low", today: t.today || false, done: false, created: new Date().toISOString() });
+    tasks.push({ id: Date.now() + Math.random(), text: t.text, project: t.project || "General", priority: t.priority || "low", today: t.today || false, done: false, note: "", created: new Date().toISOString() });
   });
-  saveTasks();
-  renderTasks();
+  saveTasks(); renderTasks();
 }
 
 // ── CHAT ──
@@ -697,17 +723,15 @@ function showTyping() {
   var msgs = document.getElementById("messages");
   var row = document.createElement("div"); row.className = "msg-row ai"; row.id = "typing-row";
   row.innerHTML = '<div class="msg-av ai">A</div><div class="msg-bub typing-bub"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>';
-  msgs.appendChild(row);
-  msgs.scrollTop = msgs.scrollHeight;
+  msgs.appendChild(row); msgs.scrollTop = msgs.scrollHeight;
 }
-
 function hideTyping() { var t = document.getElementById("typing-row"); if (t) t.remove(); }
 
 function addWelcome() {
   var h = new Date().getHours();
   var g = h < 12 ? "Good morning" : h < 17 ? "Hey" : "Evening";
   var connected = tokP || tokW;
-  addAiMsg(g + ", CJ.\n\n" + (connected ? "Calendar and email are live. " : "") + "Paste a task list from Slack or text and I'll organize it by project and priority. Or just talk — I know what you're working on.");
+  addAiMsg(g + ", CJ.\n\n" + (connected ? "Calendar and email are live. " : "") + "Paste a task list from Slack or text and I'll sort it by project and priority. Or brief me on a project and I'll help you manage it.");
 }
 
 // ── SEND ──
@@ -730,28 +754,23 @@ async function handleSend() {
   chatHistory.push({role:"user", content:text});
   showTyping();
 
-  // Inject Google data if relevant
   var wantsEmail = /email|gmail|inbox|unread|message/i.test(text);
   var wantsCal = /calendar|schedule|event|today|tomorrow|week|meeting|upcoming/i.test(text);
   var ctx = [];
-  if (wantsEmail) {
-    if (tokP) ctx.push(await getGmailText(tokP, "Personal Gmail"));
-    if (tokW) ctx.push(await getGmailText(tokW, "Work Gmail (CZ)"));
-  }
-  if (wantsCal) {
-    if (tokP) ctx.push(await getCalText(tokP, "Personal"));
-    if (tokW) ctx.push(await getCalText(tokW, "Work (CZ)"));
-  }
+  var tok = activeToken();
+  var modeLabel = mode === "p" ? "Personal" : "Work (CZ)";
 
-  // Include current tasks as context
+  if (wantsEmail && tok) ctx.push(await getGmailText(tok, modeLabel));
+  if (wantsCal && tok) ctx.push(await getCalText(tok, modeLabel));
+
   var activeTasks = tasks.filter(function(t) { return !t.done; });
-  if (activeTasks.length > 0 && /urgent|priorit|focus|today|should i/i.test(text)) {
-    ctx.push("Current open tasks:\n" + activeTasks.map(function(t) { return "  [" + t.priority + "] " + t.text + " (" + t.project + ")"; }).join("\n"));
+  if (activeTasks.length > 0 && /urgent|priorit|focus|today|should i|what.*do/i.test(text)) {
+    ctx.push("Open tasks:\n" + activeTasks.map(function(t) { return "  [" + t.priority + "] " + t.text + " (" + t.project + ")" + (t.note ? " — note: " + t.note : ""); }).join("\n"));
   }
 
   var messages = chatHistory.slice();
   if (ctx.length > 0) {
-    messages[messages.length - 1] = {role:"user", content: text + "\n\n[Live context]\n" + ctx.join("\n\n")};
+    messages[messages.length - 1] = {role:"user", content: text + "\n\n[Context — " + modeLabel + " mode]\n" + ctx.join("\n\n")};
   }
 
   try {
@@ -762,21 +781,15 @@ async function handleSend() {
     });
     var data = await res.json();
     hideTyping();
-
     if (data.error) {
       addAiMsg("Error: " + data.error.message);
     } else {
-      var raw = (data.content || []).filter(function(b) { return b.type === "text"; }).map(function(b) { return b.text; }).join("\n").trim();
-
-      // Parse task JSON if present
+      var raw = (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("\n").trim();
       var taskMatch = raw.match(/<tasks>([\s\S]*?)<\/tasks>/);
       if (taskMatch) {
-        try {
-          var parsed = JSON.parse(taskMatch[1].trim());
-          addTasksFromJSON(parsed);
-        } catch(e) {}
-        var displayText = raw.replace(/<tasks>[\s\S]*?<\/tasks>/, "").trim();
-        if (displayText) addAiMsg(displayText);
+        try { addTasksFromJSON(JSON.parse(taskMatch[1].trim())); } catch(e){}
+        var display = raw.replace(/<tasks>[\s\S]*?<\/tasks>/, "").trim();
+        if (display) addAiMsg(display);
       } else {
         addAiMsg(raw);
       }
@@ -791,17 +804,17 @@ async function handleSend() {
 
 async function getGmailText(token, label) {
   try {
-    var r = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=6&q=is:unread", {headers:{Authorization:"Bearer "+token}});
+    var r = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=6&q=is:unread -category:promotions", {headers:{Authorization:"Bearer "+token}});
     var d = await r.json();
-    if (!d.messages || !d.messages.length) return label + ": no unread.";
+    if (!d.messages || !d.messages.length) return label + " Gmail: no unread.";
     var items = await Promise.all(d.messages.slice(0,5).map(async function(m) {
       var mr = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/"+m.id+"?format=metadata&metadataHeaders=From&metadataHeaders=Subject", {headers:{Authorization:"Bearer "+token}});
       var md = await mr.json();
       var h = {}; ((md.payload&&md.payload.headers)||[]).forEach(function(x){h[x.name]=x.value;});
-      return "  - " + (h.Subject||"(no subject)") + " from " + (h.From||"?");
+      return "  - " + (h.Subject||"(no subject)") + " from " + cleanFrom(h.From||"?");
     }));
     return label + " unread:\n" + items.join("\n");
-  } catch(e) { return label + ": error fetching."; }
+  } catch(e) { return label + ": error."; }
 }
 
 async function getCalText(token, label) {
@@ -812,11 +825,11 @@ async function getCalText(token, label) {
     var d = await r.json();
     if (!d.items||!d.items.length) return label + " calendar: nothing this week.";
     return label + " calendar:\n" + d.items.map(function(e) {
-      var s = (e.start&&(e.start.dateTime||e.start.date))||"";
-      var ds = s ? new Date(s).toLocaleString([],{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}) : "All day";
-      return "  - " + ds + ": " + (e.summary||"(no title)");
+      var s=(e.start&&(e.start.dateTime||e.start.date))||"";
+      var ds=s?new Date(s).toLocaleString([],{weekday:"short",month:"short",day:"numeric",hour:"numeric",minute:"2-digit"}):"All day";
+      return "  - "+ds+": "+(e.summary||"(no title)");
     }).join("\n");
-  } catch(e) { return label + ": error fetching."; }
+  } catch(e) { return label + ": error."; }
 }
 
 init();

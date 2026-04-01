@@ -157,9 +157,10 @@ body { display: flex; flex-direction: column; align-items: center; justify-conte
 
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 <script>
+var PROXY = "https://cjs-pa.cjmitchell292.workers.dev";
 var CLIENT_ID = "887982151932-95rtd5jkk97ua175n9hjvc5gqg10uaoq.apps.googleusercontent.com";
 var SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly";
-var SYSTEM = "You are CJ's personal assistant. CJ is a contractor at Campaign Zero (criminal justice nonprofit, email cj@campaignzero.org), and co-founder/CEO of KnoVo (civic tech startup targeting 2026 midterms). CJ is a former college basketball player in Chicago who boxes, keeps a planted aquarium, and follows NCAA basketball. Current priorities: Cuyahoga Spring Break Series (wrapping up), KnoVo product build, Michael O.D. Brown Scholarship outreach, pickup basketball app idea. When Gmail or Calendar data is provided, use it for real specific answers. Tone: direct, warm, concise. Under 150 words unless more is needed.";
+var SYSTEM = "You are CJ's personal assistant. CJ is a contractor at Campaign Zero (criminal justice nonprofit, email cj@campaignzero.org), and co-founder/CEO of KnoVo (civic tech startup targeting 2026 midterms — team: CJ, Dan the engineer, Rogan doing TikTok/research). CJ is a former college basketball player in Chicago who boxes, keeps a planted 14-gallon aquarium, and follows NCAA basketball. Current priorities: Cuyahoga Spring Break Series (wrapping up), KnoVo product build, Michael O.D. Brown Scholarship outreach, pickup basketball app idea. When Gmail or Calendar data is provided in the message, use it to give real specific actionable answers. Label personal vs work clearly. Tone: direct, warm, concise. Under 150 words unless more is needed.";
 
 var apiKey = "";
 var tokenPersonal = "";
@@ -228,9 +229,11 @@ document.getElementById("signout-btn").addEventListener("click", function() {
 });
 
 document.getElementById("send-btn").addEventListener("click", handleSend);
+
 document.getElementById("msg-input").addEventListener("keydown", function(e) {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); }
 });
+
 document.getElementById("msg-input").addEventListener("input", function() {
   this.style.height = "auto";
   this.style.height = Math.min(this.scrollHeight, 120) + "px";
@@ -336,11 +339,15 @@ function hideTyping() {
 
 async function getGmailData(token, label) {
   try {
-    var r = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=6&q=is:unread", { headers: { Authorization: "Bearer " + token } });
+    var r = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=6&q=is:unread", {
+      headers: { Authorization: "Bearer " + token }
+    });
     var d = await r.json();
     if (!d.messages || d.messages.length === 0) return label + ": no unread emails.";
     var items = await Promise.all(d.messages.slice(0, 5).map(async function(m) {
-      var mr = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/" + m.id + "?format=metadata&metadataHeaders=From&metadataHeaders=Subject", { headers: { Authorization: "Bearer " + token } });
+      var mr = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages/" + m.id + "?format=metadata&metadataHeaders=From&metadataHeaders=Subject", {
+        headers: { Authorization: "Bearer " + token }
+      });
       var md = await mr.json();
       var h = {};
       ((md.payload && md.payload.headers) || []).forEach(function(x) { h[x.name] = x.value; });
@@ -354,7 +361,9 @@ async function getCalData(token, label) {
   try {
     var now = new Date().toISOString();
     var end = new Date(Date.now() + 7 * 86400000).toISOString();
-    var r = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=" + encodeURIComponent(now) + "&timeMax=" + encodeURIComponent(end) + "&maxResults=10&singleEvents=true&orderBy=startTime", { headers: { Authorization: "Bearer " + token } });
+    var r = await fetch("https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=" + encodeURIComponent(now) + "&timeMax=" + encodeURIComponent(end) + "&maxResults=10&singleEvents=true&orderBy=startTime", {
+      headers: { Authorization: "Bearer " + token }
+    });
     var d = await r.json();
     if (!d.items || d.items.length === 0) return label + " calendar: no events this week.";
     var items = d.items.map(function(e) {
@@ -390,26 +399,40 @@ async function handleSend() {
 
   var messages = chatHistory.slice();
   if (contextParts.length > 0) {
-    messages[messages.length - 1] = { role: "user", content: text + "\n\n[Live data]\n" + contextParts.join("\n\n") };
+    messages[messages.length - 1] = {
+      role: "user",
+      content: text + "\n\n[Live data]\n" + contextParts.join("\n\n")
+    };
   }
 
   try {
-    var res = await fetch("https://api.anthropic.com/v1/messages", {
+    var res = await fetch(PROXY, {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-calls": "true" },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 1000, system: SYSTEM, messages: messages })
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: SYSTEM,
+        messages: messages
+      })
     });
     var data = await res.json();
     hideTyping();
     if (data.error) {
-      addAiMsg("API error: " + data.error.message);
+      addAiMsg("Error: " + data.error.message);
     } else {
       var reply = (data.content || []).filter(function(b) { return b.type === "text"; }).map(function(b) { return b.text; }).join("\n").trim();
-      if (reply) { addAiMsg(reply); chatHistory.push({ role: "assistant", content: reply }); }
+      if (reply) {
+        addAiMsg(reply);
+        chatHistory.push({ role: "assistant", content: reply });
+      }
     }
   } catch(e) {
     hideTyping();
-    addAiMsg("Couldn't reach the API. Check your connection and try again.");
+    addAiMsg("Couldn't reach the API: " + e.message);
   }
   isBusy = false;
 }

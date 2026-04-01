@@ -496,9 +496,10 @@ async function checkNewEmails() {
 
 async function checkEmailsForToken(token, accountType) {
   try {
+    // 72-hour recency gate on alerts
     var query = accountType === "work"
-      ? "is:unread newer_than:1d"
-      : "is:unread newer_than:1d -category:promotions -category:updates -category:social -from:noreply -from:no-reply -from:notifications";
+      ? "is:unread newer_than:3d"
+      : "is:unread newer_than:3d -category:promotions -category:updates -category:social -from:noreply -from:no-reply -from:notifications";
 
     var r = await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=10&q=" + encodeURIComponent(query), { headers: { Authorization: "Bearer " + token } });
     var d = await r.json();
@@ -517,58 +518,58 @@ async function checkEmailsForToken(token, accountType) {
       var snippet = decodeHtmlEntities(md.snippet || "");
       var fromClean = cleanFrom(from);
       var fromLower = from.toLowerCase();
-      var subjectLower = subject.toLowerCase();
-      var snippetLower = snippet.toLowerCase();
 
-      var alertReason = null;
-      var alertPriority = "normal";
+      // Skip automated senders
+      var automatedDomains = ["noreply","no-reply","notifications","newsletter","mailer","updates","info@","support@","hello@","news@","digest","alert","notification","do-not-reply","donotreply"];
+      var isAutomated = automatedDomains.some(function(d) { return fromLower.includes(d); }) || from.includes("via ");
+      if (isAutomated) continue;
 
+      // Check if it's a VIP or program-related (work) or real person (personal)
+      var isVip = false, isProgram = false, isPerson = false;
       if (accountType === "work") {
-        // Check VIPs
-        var vipMatch = WORK_VIPS.find(function(v) {
-          return v.patterns.some(function(p) { return fromLower.includes(p); });
-        });
-        if (vipMatch) {
-          alertReason = "Email from " + vipMatch.name + " (" + vipMatch.role + ")";
-          alertPriority = "vip";
-        }
-        // Check Cuyahoga program keywords
-        if (!alertReason) {
-          var programMatch = PROGRAM_KEYWORDS.some(function(kw) {
-            return subjectLower.includes(kw) || snippetLower.includes(kw) || fromLower.includes(kw);
-          });
-          if (programMatch) {
-            alertReason = "Email about Cuyahoga program";
-            alertPriority = "program";
-          }
-        }
+        isVip = !!WORK_VIPS.find(function(v) { return v.patterns.some(function(p) { return fromLower.includes(p); }); });
+        isProgram = PROGRAM_KEYWORDS.some(function(kw) { return (subject+snippet).toLowerCase().includes(kw); });
+        if (!isVip && !isProgram) continue; // work: only alert for VIPs and program emails
       } else {
-        // Personal: only real people (no automated domains)
-        var automatedDomains = ["noreply","no-reply","notifications","newsletter","mailer","updates","info@","support@","hello@","news@","digest","alert","notification"];
-        var isAutomated = automatedDomains.some(function(d) { return fromLower.includes(d); }) || from.includes("via ");
-        if (!isAutomated) {
-          alertReason = "Personal email from " + fromClean;
-          alertPriority = "person";
-        }
+        isPerson = true; // personal: already filtered automated above
       }
 
-      if (alertReason) {
-        var notifBody = alertReason + ": \"" + subject + "\"";
-        sendNotif("Celeste — " + alertReason, subject + "\n" + snippet.substring(0,80), function() {
-          window.focus();
-        });
+      // AI triage — ask Celeste if this actually needs attention
+      var needsAlert = await triageEmail(fromClean, subject, snippet, accountType);
+      if (!needsAlert) continue;
 
-        var msgId = m.id;
-        addAlertMsg("email", "✉️ " + alertReason + "\n\nSubject: " + subject + "\n" + snippet.substring(0,120) + (snippet.length > 120 ? "..." : ""), function() {
-          document.getElementById("msg-inp").value = 'Summarize this email and tell me if I need to respond: from ' + fromClean + ', subject "' + subject + '". Snippet: ' + snippet.substring(0,200);
-          handleSend();
-        }, "Summarize & advise");
+      var vipMatch = isVip ? WORK_VIPS.find(function(v){return v.patterns.some(function(p){return fromLower.includes(p);});}) : null;
+      var alertReason = vipMatch ? "Email from " + vipMatch.name + " (" + vipMatch.role + ")" : isProgram ? "Cuyahoga program email" : "Email from " + fromClean;
 
-        saveSeenIds();
-      }
+      sendNotif("Celeste — " + alertReason, subject + "\n" + snippet.substring(0,80), function() { window.focus(); });
+
+      var _from = fromClean, _subj = subject, _snip = snippet;
+      addAlertMsg("email", "✉️ " + alertReason + "\n\nSubject: " + _subj + "\n" + _snip.substring(0,120) + (_snip.length > 120 ? "..." : ""), function() {
+        document.getElementById("msg-inp").value = 'Summarize this email and tell me if I need to respond: from ' + _from + ', subject "' + _subj + '". Snippet: ' + _snip.substring(0,200);
+        handleSend();
+      }, "Summarize & advise");
+
+      saveSeenIds();
     }
     saveSeenIds();
   } catch(e) {}
+}
+
+async function triageEmail(from, subject, snippet, accountType) {
+  // Use Celeste to decide if this email actually needs CJ's attention
+  try {
+    var prompt = "You are triaging emails for CJ. Does this email require CJ's attention or a response? Reply with only YES or NO.\n\nFrom: " + from + "\nSubject: " + subject + "\nPreview: " + snippet.substring(0,200) + "\n\nSay YES if: someone is asking a question, waiting for a response, there's a deadline, an action is needed, or it's time-sensitive.\nSay NO if: it's an FYI, a receipt, a confirmation, a newsletter, purely informational with no action needed, or already resolved.";
+    var res = await fetch(PROXY, {
+      method: "POST",
+      headers: {"Content-Type":"application/json","x-api-key":apiKey},
+      body: JSON.stringify({model:"claude-sonnet-4-20250514", max_tokens:5, system:"You triage emails. Reply only YES or NO.", messages:[{role:"user",content:prompt}]})
+    });
+    var data = await res.json();
+    var answer = (data.content||[]).filter(function(b){return b.type==="text";}).map(function(b){return b.text;}).join("").trim().toUpperCase();
+    return answer.startsWith("YES");
+  } catch(e) {
+    return true; // if triage fails, default to showing
+  }
 }
 
 // ── CALENDAR ──

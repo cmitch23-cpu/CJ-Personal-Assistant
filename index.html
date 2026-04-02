@@ -246,6 +246,34 @@ textarea.ob-inp { resize: none; line-height: 1.55; }
 #send-btn:hover { opacity: 0.85; }
 #send-btn svg { width: 12px; height: 12px; fill: white; }
 
+
+#sv-btn {
+  width: 100%;
+  padding: 9px 0;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  color: var(--text3);
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  letter-spacing: 0.02em;
+}
+#sv-btn:hover {
+  background: var(--accent-dim);
+  color: var(--accent-l);
+}
+#sv-btn .sv-btn-icon {
+  font-size: 11px;
+  opacity: 0.6;
+}
+
 /* ── SIMPLE VIEW ── */
 #simple-view {
   display: none;
@@ -492,7 +520,6 @@ textarea.ob-inp { resize: none; line-height: 1.55; }
         <button class="cf-btn active" data-view="week">Week</button>
         <button class="cf-btn" data-view="day">Day</button>
       </div>
-      <button class="lbtn" id="sv-btn" style="color:var(--accent-l);">focus</button>
       <button class="lbtn" id="so-btn">sign out</button>
     </div>
   </div>
@@ -504,6 +531,10 @@ textarea.ob-inp { resize: none; line-height: 1.55; }
     </div>
     <div id="email-scroll"><span class="email-loading">Loading...</span></div>
   </div>
+  <button id="sv-btn">
+    <span class="sv-btn-icon">✦</span>
+    Focus Mode
+  </button>
   <div id="bottom">
     <div id="todo-section">
       <div id="todo-header">
@@ -518,6 +549,8 @@ textarea.ob-inp { resize: none; line-height: 1.55; }
         <button class="tf-btn active" data-f="all">All</button>
         <button class="tf-btn" data-f="today">Today</button>
         <button class="tf-btn" data-f="high">High</button>
+        <button class="tf-btn" data-f="med">Med</button>
+        <button class="tf-btn" data-f="low">Low</button>
         <button class="tf-btn" data-f="done">Done</button>
       </div>
       <div id="todo-list"></div>
@@ -933,6 +966,8 @@ function renderTasks(){
   var filtered=arr.filter(function(t){
     if(todoFilter==="today")return t.today&&!t.done;
     if(todoFilter==="high")return t.priority==="high"&&!t.done;
+    if(todoFilter==="med")return t.priority==="med"&&!t.done;
+    if(todoFilter==="low")return t.priority==="low"&&!t.done;
     if(todoFilter==="done")return t.done;
     return!t.done;
   });

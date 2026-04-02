@@ -604,6 +604,8 @@ function activeToken() { return mode==="p" ? tokP : tokW; }
 function launchDashboard() {
   document.getElementById("dashboard").style.display = "flex";
   document.getElementById("tb-date").textContent = new Date().toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"});
+  document.getElementById("mode-p").textContent = profile.nickP || "Account 1";
+  document.getElementById("mode-w").textContent = profile.nickW || "Account 2";
   loadSeenIds();
   setMode("p");
   if (ws.p.history.length === 0) addWelcome();

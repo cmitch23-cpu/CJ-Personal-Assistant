@@ -314,22 +314,30 @@ textarea.ob-inp { resize: none; line-height: 1.55; }
     <div class="ob-step" id="ob-3">
       <div class="ob-step-num">Step 3 of 4</div>
       <div class="ob-heading">Connect Google.</div>
-      <div class="ob-sub">I'll read your Gmail and Calendar so I can actually help — not just chat. You can connect one or both accounts.</div>
-      <button class="ob-google-btn" id="ob-btn-p" id="ob-btn-p">
+      <div class="ob-sub">I'll read your Gmail and Calendar so I can actually help. Connect one or both accounts and give each a nickname.</div>
+
+      <button class="ob-google-btn" id="ob-btn-p">
         <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
-        <span id="btn-p-label">Connect primary account</span>
+        <span id="btn-p-label">Connect first account</span>
         <span class="ob-check" id="check-p" style="display:none">✓</span>
       </button>
-      <button class="ob-google-btn" id="ob-btn-w" id="ob-btn-w">
+      <div id="nick-p-row" style="display:none; margin-top:6px; margin-bottom:4px;">
+        <input class="ob-inp" id="nick-p" placeholder="Nickname (e.g. Personal, Work, Campaign Zero)" maxlength="20" style="padding:10px 14px; font-size:13px;"/>
+      </div>
+
+      <button class="ob-google-btn" id="ob-btn-w" style="margin-top:4px;">
         <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
         <span id="btn-w-label">Connect second account (optional)</span>
         <span class="ob-check" id="check-w" style="display:none">✓</span>
       </button>
-      <button class="ob-btn" id="ob-step3-btn" style="margin-top:8px;">Continue →</button>
-      <button class="ob-skip" id="ob-step3-btn">Skip — use without Google</button>
+      <div id="nick-w-row" style="display:none; margin-top:6px; margin-bottom:4px;">
+        <input class="ob-inp" id="nick-w" placeholder="Nickname (e.g. Personal, Work, Campaign Zero)" maxlength="20" style="padding:10px 14px; font-size:13px;"/>
+      </div>
+
+      <button class="ob-btn" id="ob-step3-continue-btn" style="margin-top:12px;">Continue →</button>
+      <button class="ob-skip" id="ob-step3-skip">Skip — use without Google</button>
     </div>
 
-    <!-- Step 4: API key -->
     <div class="ob-step" id="ob-4">
       <div class="ob-step-num">Step 4 of 4</div>
       <div class="ob-heading">One last thing.</div>
@@ -412,7 +420,7 @@ var CLIENT_ID = "887982151932-95rtd5jkk97ua175n9hjvc5gqg10uaoq.apps.googleuserco
 var SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly";
 
 // ── USER PROFILE (set during onboarding) ──
-var profile = { name: "", role: "", context: "", contacts: [], keywords: [] };
+var profile = { name: "", role: "", context: "", contacts: [], keywords: [], nickP: "Account 1", nickW: "Account 2" };
 
 // ── STATE ──
 var apiKey = "", tokP = "", tokW = "", mode = "p", calView = "week", todoFilter = "all";
@@ -503,11 +511,15 @@ function doSignIn(which) {
         document.getElementById("ob-btn-w").classList.add("connected");
         document.getElementById("check-w").style.display = "inline";
         document.getElementById("btn-w-label").textContent = "Second account connected";
+        document.getElementById("nick-w-row").style.display = "block";
+        document.getElementById("nick-w").focus();
       } else {
         tokP = resp.access_token; sessionStorage.setItem("tok_p", tokP);
         document.getElementById("ob-btn-p").classList.add("connected");
         document.getElementById("check-p").style.display = "inline";
-        document.getElementById("btn-p-label").textContent = "Primary account connected";
+        document.getElementById("btn-p-label").textContent = "First account connected";
+        document.getElementById("nick-p-row").style.display = "block";
+        document.getElementById("nick-p").focus();
       }
     }
   });
@@ -521,6 +533,9 @@ function finishOnboarding() {
   err.classList.remove("show");
   apiKey = key;
   parseContacts();
+  // Save nicknames
+  var np = document.getElementById("nick-p"); if (np && np.value.trim()) profile.nickP = np.value.trim();
+  var nw = document.getElementById("nick-w"); if (nw && nw.value.trim()) profile.nickW = nw.value.trim();
   saveAll();
   document.getElementById("onboarding").style.display = "none";
   launchDashboard();
@@ -576,8 +591,11 @@ function setMode(m) {
   mode = m;
   document.getElementById("mode-p").className = "mode-btn" + (m==="p"?" active-p":"");
   document.getElementById("mode-w").className = "mode-btn" + (m==="w"?" active-w":"");
-  document.getElementById("chat-status").textContent = "Celeste — " + (m==="p"?"personal":"work");
-  document.getElementById("todo-title").textContent = (m==="p"?"Personal":"Work") + " Tasks";
+  // Update toggle labels with nicknames
+  document.getElementById("mode-p").textContent = profile.nickP || "Account 1";
+  document.getElementById("mode-w").textContent = profile.nickW || "Account 2";
+  document.getElementById("chat-status").textContent = "Celeste — " + (m==="p"?(profile.nickP||"Account 1"):(profile.nickW||"Account 2"));
+  document.getElementById("todo-title").textContent = (m==="p"?(profile.nickP||"Account 1"):(profile.nickW||"Account 2")) + " Tasks";
   renderCalendar(); loadEmails(); renderTasks(); renderChatHistory();
 }
 function activeToken() { return mode==="p" ? tokP : tokW; }

@@ -664,14 +664,14 @@ function doSignIn(which) {
     callback: function(resp) {
       if (resp.error) { alert("Sign-in failed: " + resp.error); return; }
       if (which === "w") {
-        tokW = resp.access_token; sessionStorage.setItem("tok_w", tokW);
+        tokW = resp.access_token; localStorage.setItem("tok_w", tokW);
         document.getElementById("ob-btn-w").classList.add("connected");
         document.getElementById("check-w").style.display = "inline";
         document.getElementById("btn-w-label").textContent = "Second account connected";
         document.getElementById("nick-w-row").style.display = "block";
         document.getElementById("nick-w").focus();
       } else {
-        tokP = resp.access_token; sessionStorage.setItem("tok_p", tokP);
+        tokP = resp.access_token; localStorage.setItem("tok_p", tokP);
         document.getElementById("ob-btn-p").classList.add("connected");
         document.getElementById("check-p").style.display = "inline";
         document.getElementById("btn-p-label").textContent = "First account connected";
@@ -706,12 +706,11 @@ function init() {
   if (savedProfile && savedKey) {
     try { profile = JSON.parse(savedProfile); } catch(e){}
     apiKey = savedKey;
-    tokP = sessionStorage.getItem("tok_p") || "";
-    tokW = sessionStorage.getItem("tok_w") || "";
+    tokP = localStorage.getItem("tok_p") || "";
+    tokW = localStorage.getItem("tok_w") || "";
     try { var t = JSON.parse(localStorage.getItem("celeste_tasks")||"{}"); ws.p.tasks = t.p||[]; ws.w.tasks = t.w||[]; } catch(e){}
     document.getElementById("onboarding").style.display = "none";
     if (!tokP && !tokW) {
-      // Need to re-auth Google
       showReauth();
     } else {
       launchDashboard();
@@ -749,8 +748,10 @@ function setMode(m) {
   document.getElementById("mode-p").className = "mode-btn" + (m==="p"?" active-p":"");
   document.getElementById("mode-w").className = "mode-btn" + (m==="w"?" active-w":"");
   // Update toggle labels with nicknames
-  document.getElementById("mode-p").textContent = profile.nickP || "Account 1";
-  document.getElementById("mode-w").textContent = profile.nickW || "Account 2";
+  var _np = profile.nickP || "Account 1";
+  var _nw = profile.nickW || "Account 2";
+  document.getElementById("mode-p").textContent = _np;
+  document.getElementById("mode-w").textContent = _nw;
   document.getElementById("chat-status").textContent = "Celeste — " + (m==="p"?(profile.nickP||"Account 1"):(profile.nickW||"Account 2"));
   document.getElementById("todo-title").textContent = (m==="p"?(profile.nickP||"Account 1"):(profile.nickW||"Account 2")) + " Tasks";
   renderCalendar(); loadEmails(); renderTasks(); renderChatHistory();
@@ -761,8 +762,10 @@ function activeToken() { return mode==="p" ? tokP : tokW; }
 function launchDashboard() {
   document.getElementById("dashboard").style.display = "flex";
   document.getElementById("tb-date").textContent = new Date().toLocaleDateString([],{weekday:"long",month:"long",day:"numeric"});
-  document.getElementById("mode-p").textContent = profile.nickP || "Account 1";
-  document.getElementById("mode-w").textContent = profile.nickW || "Account 2";
+  var _np = profile.nickP || "Account 1";
+  var _nw = profile.nickW || "Account 2";
+  document.getElementById("mode-p").textContent = _np;
+  document.getElementById("mode-w").textContent = _nw;
   loadSeenIds();
   setMode("p");
   if (ws.p.history.length === 0) addWelcome();

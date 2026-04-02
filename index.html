@@ -599,6 +599,605 @@ function buildSystem() {
     (contactList?"\nKey contacts to watch for:\n"+contactList+"\n":"")+
     (profile.keywords.length?"\nKeywords to watch for in emails: "+kwList+"\n":"")+
     "\nTASK PARSING: When "+profile.name+" pastes a list of tasks, respond with:\n<tasks>\n[{\"text\":\"task\",\"project\":\"Project Name\",\"priority\":\"high|med|low\",\"today\":true|false}]\n</tasks>\nThen give a brief summary of your prioritization.\n\n"+
+    "TASK COMMANDS: When "+profile.name+" asks to change priority, mark done, remove, add, clear list, or move a task to a project, respond with:\\n<task_command>\\n{\\"action\\":\\"update_priority\\"|\\"clear_all\\"|\\"clear_done\\"|\\"mark_done\\"|\\"remove\\"|\\"add\\"|\\"update_project\\",\\"target\\":\\"partial task text\\",\\"priority\\":\\"high|med|low\\",\\"project\\":\\"project name\\"}\\n</task_command>\\nFor priority changes use update_priority + target + priority. Always confirm what you did.\\n\\nhead>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Celeste</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230a0b09'/><text y='.9em' font-size='72' x='50%' text-anchor='middle' dominant-baseline='hanging' fill='%235DCAA5'>✦</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230a0b09'/><text y='.9em' font-size='72' x='50%' text-anchor='middle' dominant-baseline='hanging' fill='%235DCAA5'>✦</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #0a0b09; --s1: #111210; --s2: #181916; --s3: #1f211d;
+  --border: rgba(255,255,255,0.06); --border2: rgba(255,255,255,0.11);
+  --text: #e4e2db; --text2: #8a887f; --text3: #4a4845;
+  --accent: #1D9E75; --accent-l: #5DCAA5; --accent-dim: rgba(29,158,117,0.12); --accent-b: rgba(29,158,117,0.25);
+  --warn: #BA7517; --warn-dim: rgba(186,117,23,0.12); --warn-b: rgba(186,117,23,0.3);
+  --red: #c44; --red-dim: rgba(200,68,68,0.12);
+  --font: 'DM Sans', sans-serif; --display: 'Syne', sans-serif; --mono: 'DM Mono', monospace;
+}
+html, body { height: 100%; font-family: var(--font); background: var(--bg); color: var(--text); -webkit-font-smoothing: antialiased; overflow: hidden; }
+
+/* ── ONBOARDING ── */
+#onboarding {
+  position: fixed; inset: 0; background: var(--bg);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 200; padding: 20px;
+}
+
+.ob-wrap {
+  width: 100%; max-width: 500px;
+  display: flex; flex-direction: column; align-items: center;
+}
+
+/* Step container */
+.ob-step {
+  width: 100%; display: none; flex-direction: column; align-items: center;
+  animation: stepIn 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.ob-step.active { display: flex; }
+@keyframes stepIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+@keyframes stepOut { from{opacity:1;transform:translateY(0)} to{opacity:0;transform:translateY(-16px)} }
+
+/* Logo / wordmark */
+.ob-logo-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 40px; }
+.ob-star { font-size: 28px; margin-bottom: 10px; animation: spin 8s linear infinite; display: inline-block; }
+@keyframes spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+.ob-wordmark { font-family: var(--display); font-size: 32px; font-weight: 700; color: var(--text); letter-spacing: -0.02em; }
+.ob-tagline { font-size: 14px; color: var(--text3); margin-top: 4px; text-align: center; letter-spacing: 0.02em; }
+
+/* Step header */
+.ob-step-num { font-size: 11px; color: var(--text3); font-family: var(--mono); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 10px; }
+.ob-heading { font-family: var(--display); font-size: 26px; font-weight: 600; text-align: center; margin-bottom: 8px; line-height: 1.2; }
+.ob-sub { font-size: 14px; color: var(--text2); text-align: center; line-height: 1.6; margin-bottom: 32px; max-width: 380px; }
+.ob-sub a { color: var(--accent-l); text-decoration: none; }
+
+/* Inputs */
+.ob-field { width: 100%; margin-bottom: 12px; }
+.ob-label { font-size: 11px; color: var(--text3); font-family: var(--mono); margin-bottom: 5px; letter-spacing: 0.04em; display: block; }
+.ob-inp {
+  width: 100%; background: var(--s2); border: 1px solid var(--border2);
+  border-radius: 10px; padding: 13px 16px; font-family: var(--font); font-size: 14px;
+  color: var(--text); outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.ob-inp:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+.ob-inp::placeholder { color: var(--text3); }
+.ob-inp.error { border-color: var(--red); }
+textarea.ob-inp { resize: none; line-height: 1.55; }
+
+/* Chips for role selection */
+.ob-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 28px; }
+.ob-chip {
+  padding: 8px 16px; border-radius: 24px; border: 1px solid var(--border2);
+  background: var(--s2); color: var(--text2); font-size: 13px; cursor: pointer;
+  transition: all 0.18s; font-family: var(--font);
+}
+.ob-chip:hover { border-color: var(--accent-b); color: var(--accent-l); background: var(--accent-dim); }
+.ob-chip.selected { border-color: var(--accent); color: var(--accent-l); background: var(--accent-dim); }
+
+/* Google buttons */
+.ob-google-btn {
+  width: 100%; padding: 13px 16px; background: var(--s2); color: var(--text);
+  border: 1px solid var(--border2); border-radius: 10px; font-family: var(--font);
+  font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 12px;
+  transition: all 0.18s; margin-bottom: 10px;
+}
+.ob-google-btn:hover { background: var(--s3); border-color: var(--border); }
+.ob-google-btn.connected { border-color: var(--accent-b); background: var(--accent-dim); color: var(--accent-l); }
+.ob-google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+.ob-google-icon { width: 18px; height: 18px; flex-shrink: 0; }
+.ob-check { margin-left: auto; font-size: 14px; }
+
+/* Primary button */
+.ob-btn {
+  width: 100%; padding: 14px; background: var(--accent); color: #fff;
+  border: none; border-radius: 10px; font-family: var(--font); font-size: 15px;
+  font-weight: 500; cursor: pointer; transition: all 0.18s; margin-top: 4px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.ob-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+.ob-btn:active { transform: translateY(0); }
+.ob-skip { font-size: 12px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--font); margin-top: 14px; text-decoration: underline; display: block; text-align: center; }
+.ob-skip:hover { color: var(--text2); }
+
+/* Progress dots */
+.ob-progress { display: flex; gap: 6px; margin-bottom: 36px; }
+.ob-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border2); transition: all 0.3s; }
+.ob-dot.active { background: var(--accent-l); width: 20px; border-radius: 3px; }
+.ob-dot.done { background: var(--accent); }
+
+/* Error msg */
+.ob-err { font-size: 12px; color: var(--red); margin-top: 6px; display: none; }
+.ob-err.show { display: block; }
+
+/* ── GATE (API KEY) ── */
+#gate-key {
+  position: fixed; inset: 0; background: var(--bg);
+  display: none; align-items: center; justify-content: center; z-index: 150; padding: 20px;
+}
+.gate-box { width: 100%; max-width: 400px; animation: stepIn 0.4s ease both; }
+.gate-wordmark { font-family: var(--display); font-size: 28px; font-weight: 700; text-align: center; margin-bottom: 6px; }
+.gate-sub { font-size: 13px; color: var(--text2); text-align: center; margin-bottom: 28px; line-height: 1.6; }
+.gate-sub a { color: var(--accent-l); text-decoration: none; }
+
+/* ── DASHBOARD ── */
+#dashboard { display: none; flex-direction: column; height: 100vh; width: 100vw; overflow: hidden; }
+#topbar { display: flex; align-items: center; justify-content: space-between; padding: 9px 16px; background: var(--s1); border-bottom: 1px solid var(--border); flex-shrink: 0; gap: 12px; }
+.tb-left { display: flex; align-items: center; gap: 10px; }
+.tb-logo { font-family: var(--display); font-size: 15px; font-weight: 600; color: var(--text); }
+.tb-date { font-size: 12px; color: var(--text3); font-family: var(--mono); }
+.tb-right { display: flex; align-items: center; gap: 8px; }
+.mode-toggle { display: flex; background: var(--s2); border: 1px solid var(--border2); border-radius: 20px; padding: 2px; gap: 2px; }
+.mode-btn { font-size: 11px; padding: 3px 12px; border-radius: 18px; border: none; background: transparent; color: var(--text3); cursor: pointer; font-family: var(--mono); transition: all 0.15s; }
+.mode-btn.active-p { background: var(--accent-dim); color: var(--accent-l); }
+.mode-btn.active-w { background: var(--warn-dim); color: var(--warn); }
+.cal-filter { display: flex; gap: 3px; }
+.cf-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--mono); transition: all 0.15s; }
+.cf-btn.active { background: var(--accent-dim); color: var(--accent-l); border-color: var(--accent-b); }
+.lbtn { font-size: 11px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--font); text-decoration: underline; }
+.lbtn:hover { color: var(--text2); }
+#cal-section { flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--s1); }
+#cal-grid { display: grid; }
+.cal-col { border-right: 1px solid var(--border); padding: 7px 10px; min-width: 0; overflow: hidden; }
+.cal-col:last-child { border-right: none; }
+.cal-day-header { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 2px; }
+.cal-day-num { font-family: var(--display); font-size: 20px; font-weight: 600; color: var(--text3); margin-bottom: 5px; line-height: 1; display: inline-block; }
+.cal-col.today .cal-day-num { color: var(--accent-l); background: var(--accent-dim); border-radius: 6px; padding: 1px 7px; margin-left: -7px; }
+.cal-col.today .cal-day-header { color: var(--accent-l); }
+.cal-event { font-size: 10px; padding: 2px 6px; border-radius: 3px; margin-bottom: 2px; border-left: 2px solid var(--accent); background: var(--accent-dim); color: var(--accent-l); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.cal-event.soon { border-left-color: var(--warn); background: var(--warn-dim); color: #d4951a; animation: pulse-warn 2s infinite; }
+@keyframes pulse-warn { 0%,100%{opacity:1} 50%{opacity:0.6} }
+.cal-empty { font-size: 10px; color: var(--text3); font-style: italic; }
+#email-section { flex-shrink: 0; border-bottom: 1px solid var(--border); background: var(--s2); }
+#email-header { display: flex; align-items: center; gap: 8px; padding: 6px 14px 4px; }
+.email-title { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; }
+.email-refresh { font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--mono); text-decoration: underline; padding: 0; }
+#email-scroll { display: flex; gap: 8px; overflow-x: auto; padding: 0 14px 8px; scrollbar-width: none; }
+#email-scroll::-webkit-scrollbar { display: none; }
+.email-card { flex-shrink: 0; width: 240px; background: var(--s1); border: 1px solid var(--border); border-radius: 7px; padding: 8px 10px; cursor: pointer; transition: border-color 0.15s; }
+.email-card:hover { border-color: var(--border2); }
+.email-card.vip { border-left: 2px solid var(--warn); }
+.email-card.program { border-left: 2px solid var(--accent); }
+.email-card.person { border-left: 2px solid var(--border2); }
+.email-from { font-size: 11px; font-weight: 500; color: var(--text); margin-bottom: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.email-subj { font-size: 11px; color: var(--text2); margin-bottom: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.email-preview { font-size: 10px; color: var(--text3); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.email-tag { font-size: 9px; padding: 1px 6px; border-radius: 10px; display: inline-block; margin-top: 3px; font-family: var(--mono); }
+.email-tag.vip { background: var(--warn-dim); color: var(--warn); border: 1px solid var(--warn-b); }
+.email-tag.person { background: var(--s3); color: var(--text2); border: 1px solid var(--border2); }
+.email-loading { font-size: 12px; color: var(--text3); padding: 4px 0; align-self: center; }
+#bottom { display: flex; flex: 1; overflow: hidden; min-height: 0; }
+#todo-section { width: 420px; flex-shrink: 0; border-right: 1px solid var(--border); display: flex; flex-direction: column; background: var(--s1); }
+#todo-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+.section-title { font-family: var(--display); font-size: 13px; font-weight: 600; color: var(--text); }
+.todo-counts { font-size: 11px; color: var(--text3); font-family: var(--mono); }
+#quick-add { display: flex; gap: 6px; padding: 8px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+#quick-inp { flex: 1; background: var(--s2); border: 1px solid var(--border2); border-radius: 6px; padding: 6px 10px; font-family: var(--font); font-size: 12px; color: var(--text); outline: none; transition: border-color 0.15s; }
+#quick-inp:focus { border-color: var(--accent); }
+#quick-inp::placeholder { color: var(--text3); }
+#quick-add-btn { padding: 6px 10px; background: var(--accent-dim); border: 1px solid var(--accent-b); border-radius: 6px; color: var(--accent-l); font-size: 12px; cursor: pointer; font-family: var(--font); white-space: nowrap; transition: all 0.15s; }
+#quick-add-btn:hover { background: var(--accent); color: #fff; }
+#todo-filter { display: flex; gap: 4px; padding: 7px 12px; border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.tf-btn { font-size: 11px; padding: 3px 10px; border-radius: 20px; border: 1px solid var(--border); background: transparent; color: var(--text3); cursor: pointer; font-family: var(--mono); transition: all 0.15s; }
+.tf-btn.active { background: var(--accent-dim); color: var(--accent-l); border-color: var(--accent-b); }
+#todo-list { flex: 1; overflow-y: auto; padding: 8px 10px; }
+#todo-list::-webkit-scrollbar { width: 3px; }
+#todo-list::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.project-group { margin-bottom: 12px; }
+.project-label { font-size: 10px; color: var(--text3); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 5px; padding: 0 4px; }
+.task-item { border-radius: 7px; margin-bottom: 3px; border: 1px solid transparent; transition: all 0.15s; }
+.task-item:hover { background: var(--s2); border-color: var(--border); }
+.task-item.done { opacity: 0.38; }
+.task-main { display: flex; align-items: flex-start; gap: 8px; padding: 7px 8px 4px; }
+.task-cb { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--border2); flex-shrink: 0; margin-top: 2px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.15s; }
+.task-cb:hover { border-color: var(--accent); }
+.task-cb.checked { background: var(--accent); border-color: var(--accent); }
+.task-cb.checked::after { content:''; width:5px; height:3px; border-left:1.5px solid #fff; border-bottom:1.5px solid #fff; transform:rotate(-45deg) translateY(-1px); display:block; }
+.task-body { flex: 1; min-width: 0; }
+.task-text { font-size: 13px; color: var(--text); line-height: 1.4; }
+.task-item.done .task-text { text-decoration: line-through; color: var(--text3); }
+.task-meta { display: flex; align-items: center; gap: 5px; margin-top: 2px; flex-wrap: wrap; }
+.priority-dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+.p-high{background:var(--red)} .p-med{background:var(--warn)} .p-low{background:var(--text3)}
+.task-proj-tag { font-size: 10px; color: var(--text3); font-family: var(--mono); }
+.task-note-toggle { font-size: 10px; color: var(--text3); background: none; border: none; cursor: pointer; font-family: var(--mono); padding: 0; }
+.task-note-toggle:hover { color: var(--text2); }
+.task-note-area { padding: 0 8px 6px 30px; }
+.task-note { width: 100%; background: transparent; border: none; border-top: 1px solid var(--border); padding: 4px 0; font-family: var(--font); font-size: 11px; color: var(--text2); outline: none; resize: none; line-height: 1.5; display: none; }
+.task-note::placeholder { color: var(--text3); }
+.task-note.visible { display: block; }
+.todo-empty { font-size: 13px; color: var(--text3); text-align: center; padding: 28px 16px; line-height: 1.7; }
+#chat-section { flex: 1; display: flex; flex-direction: column; background: var(--bg); min-width: 0; }
+#chat-header { padding: 10px 14px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 8px; flex-shrink: 0; background: var(--s1); }
+.chat-av { width: 22px; height: 22px; border-radius: 50%; background: var(--accent-dim); border: 1px solid var(--accent-b); display: flex; align-items: center; justify-content: center; font-size: 9px; color: var(--accent-l); font-weight: 500; }
+.chat-status { font-size: 12px; color: var(--text2); flex: 1; }
+#notif-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); display: none; animation: blink 2s infinite; }
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+#messages { flex: 1; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
+#messages::-webkit-scrollbar { width: 3px; }
+#messages::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+.msg-row { display: flex; gap: 7px; align-items: flex-start; }
+.msg-row.user { flex-direction: row-reverse; align-self: flex-end; max-width: 84%; }
+.msg-row.ai, .msg-row.alert { max-width: 90%; }
+.msg-av { width: 22px; height: 22px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 500; flex-shrink: 0; margin-top: 1px; }
+.msg-av.ai { background: var(--accent-dim); color: var(--accent-l); border: 1px solid var(--accent-b); }
+.msg-av.user { background: var(--s3); color: var(--text2); border: 1px solid var(--border2); }
+.msg-av.alert-meet { background: var(--warn-dim); color: var(--warn); border: 1px solid var(--warn-b); }
+.msg-av.alert-email { background: var(--accent-dim); color: var(--accent-l); border: 1px solid var(--accent-b); }
+.msg-bub { padding: 8px 11px; border-radius: 13px; font-size: 13px; line-height: 1.55; white-space: pre-wrap; word-break: break-word; }
+.msg-row.ai .msg-bub { background: var(--s2); border: 1px solid var(--border); color: var(--text); border-top-left-radius: 3px; }
+.msg-row.user .msg-bub { background: var(--accent); color: #fff; border-top-right-radius: 3px; }
+.msg-row.alert .msg-bub { background: var(--warn-dim); border: 1px solid var(--warn-b); color: var(--text); border-top-left-radius: 3px; }
+.msg-row.alert.email-alert .msg-bub { background: var(--accent-dim); border-color: var(--accent-b); }
+.msg-ts { font-size: 10px; color: var(--text3); font-family: var(--mono); margin-top: 2px; padding: 0 3px; }
+.msg-row.user .msg-ts { text-align: right; }
+.alert-action { display: inline-block; margin-top: 6px; font-size: 11px; color: var(--accent-l); cursor: pointer; text-decoration: underline; font-family: var(--mono); }
+.typing-bub { padding: 9px 13px; display: flex; gap: 4px; align-items: center; }
+.dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text3); animation: pulse 1.2s infinite; }
+.dot:nth-child(2){animation-delay:.2s} .dot:nth-child(3){animation-delay:.4s}
+@keyframes pulse{0%,60%,100%{opacity:.3;transform:scale(1)}30%{opacity:1;transform:scale(1.3)}}
+#composer { padding: 9px 11px; border-top: 1px solid var(--border); display: flex; gap: 7px; align-items: flex-end; background: var(--s1); flex-shrink: 0; }
+#msg-inp { flex: 1; resize: none; background: var(--s2); border: 1px solid var(--border2); border-radius: 10px; padding: 8px 11px; font-family: var(--font); font-size: 13px; color: var(--text); outline: none; max-height: 200px; overflow-y: auto; line-height: 1.5; transition: border-color 0.15s; }
+#msg-inp:focus { border-color: var(--accent); }
+#msg-inp::placeholder { color: var(--text3); }
+#send-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.15s; }
+#send-btn:hover { opacity: 0.85; }
+#send-btn svg { width: 12px; height: 12px; fill: white; }
+
+
+#sv-btn {
+  width: 100%;
+  padding: 12px 0;
+  background: var(--s2);
+  border: none;
+  border-top: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+  color: var(--accent-l);
+  font-family: var(--font);
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+#sv-btn:hover {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+#sv-btn .sv-btn-icon {
+  font-size: 12px;
+}
+
+/* ── SIMPLE VIEW ── */
+#simple-view {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #080908;
+  z-index: 300;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+#simple-view .sv-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 52px 64px;
+  background: #0f100e;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 20px;
+  max-width: 560px;
+  width: 90%;
+}
+
+#simple-view .sv-time {
+  font-family: var(--mono);
+  font-size: 72px;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+#simple-view .sv-label {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+}
+
+#simple-view .sv-task {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--accent-l);
+  text-align: center;
+  line-height: 1.4;
+  margin-bottom: 32px;
+}
+
+#simple-view .sv-task.empty {
+  color: var(--text3);
+  font-size: 17px;
+  font-style: italic;
+}
+
+#simple-view .sv-done-btn {
+  padding: 10px 28px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  color: var(--text3);
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+#simple-view .sv-done-btn:hover {
+  border-color: var(--accent-b);
+  color: var(--accent-l);
+  background: var(--accent-dim);
+}
+
+#simple-view .sv-quote {
+  position: absolute;
+  bottom: 40px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.08);
+  font-family: var(--font);
+  font-style: italic;
+  text-align: center;
+  letter-spacing: 0.01em;
+  max-width: 420px;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+
+#simple-view .sv-why {
+  font-size: 12px;
+  color: var(--text3);
+  font-family: var(--mono);
+  text-align: center;
+  margin-bottom: 24px;
+  margin-top: -16px;
+  min-height: 18px;
+  transition: opacity 0.2s;
+  font-style: italic;
+}
+
+#simple-view .sv-exit {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.12);
+  font-family: var(--mono);
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: color 0.2s;
+  letter-spacing: 0.05em;
+}
+#simple-view .sv-exit:hover { color: var(--text3); }
+
+</style>
+</head>
+<body>
+
+<!-- ── ONBOARDING ── -->
+<div id="onboarding">
+  <div class="ob-wrap">
+
+    <!-- Progress -->
+    <div class="ob-progress">
+      <div class="ob-dot active" id="dot-0"></div>
+      <div class="ob-dot" id="dot-1"></div>
+      <div class="ob-dot" id="dot-2"></div>
+      <div class="ob-dot" id="dot-3"></div>
+      <div class="ob-dot" id="dot-4"></div>
+    </div>
+
+    <!-- Step 0: Welcome -->
+    <div class="ob-step active" id="ob-0">
+      <div class="ob-logo-wrap">
+        <span class="ob-star">✦</span>
+        <div class="ob-wordmark">Celeste</div>
+        <div class="ob-tagline">Your personal AI assistant</div>
+      </div>
+      <div class="ob-heading">Nice to meet you.</div>
+      <div class="ob-sub">I'm Celeste. I'll keep you on top of your calendar, email, and tasks — and get out of your way the rest of the time.<br><br>Let's get you set up in about a minute.</div>
+      <button class="ob-btn" id="ob-start-btn">Get started →</button>
+    </div>
+
+    <!-- Step 1: Name + role -->
+    <div class="ob-step" id="ob-1">
+      <div class="ob-step-num">Step 1 of 4</div>
+      <div class="ob-heading">Tell me about yourself.</div>
+      <div class="ob-sub">I'll use this to personalize how I help you.</div>
+      <div class="ob-field">
+        <label class="ob-label">Your first name</label>
+        <input id="ob-name" class="ob-inp" type="text" placeholder="e.g. Marcus" autocomplete="given-name"/>
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">What do you do?</label>
+        <input id="ob-role" class="ob-inp" type="text" placeholder="e.g. Marketing director at a startup"/>
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">Anything else I should know about you? (optional)</label>
+        <textarea id="ob-context" class="ob-inp" rows="3" placeholder="Side projects, interests, how you like to work..."></textarea>
+      </div>
+      <div class="ob-err" id="err-1">Please enter your name to continue.</div>
+      <button class="ob-btn" id="ob-step1-btn">Continue →</button>
+    </div>
+
+    <!-- Step 2: Key contacts -->
+    <div class="ob-step" id="ob-2">
+      <div class="ob-step-num">Step 2 of 4</div>
+      <div class="ob-heading">Who matters most?</div>
+      <div class="ob-sub">I'll watch for emails from these people and alert you right away. Enter names and their relationship to you.</div>
+      <div class="ob-field">
+        <label class="ob-label">Key contacts (one per line — name and role)</label>
+        <textarea id="ob-contacts" class="ob-inp" rows="6" placeholder="e.g.&#10;Sarah — my manager&#10;Jordan — business partner&#10;Mom — family"></textarea>
+      </div>
+      <div class="ob-field">
+        <label class="ob-label">Any keywords I should watch for in emails? (optional)</label>
+        <input id="ob-keywords" class="ob-inp" type="text" placeholder="e.g. invoice, urgent, project name"/>
+      </div>
+      <button class="ob-btn" id="ob-step2-btn">Continue →</button>
+      <button class="ob-skip" id="ob-step2-btn">Skip this step</button>
+    </div>
+
+    <!-- Step 3: Google -->
+    <div class="ob-step" id="ob-3">
+      <div class="ob-step-num">Step 3 of 4</div>
+      <div class="ob-heading">Connect Google.</div>
+      <div class="ob-sub">I'll read your Gmail and Calendar so I can actually help. Connect one or both accounts and give each a nickname.</div>
+
+      <button class="ob-google-btn" id="ob-btn-p">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        <span id="btn-p-label">Connect first account</span>
+        <span class="ob-check" id="check-p" style="display:none">✓</span>
+      </button>
+      <div id="nick-p-row" style="display:none; margin-top:6px; margin-bottom:4px;">
+        <input class="ob-inp" id="nick-p" placeholder="Nickname (e.g. Personal, Work, Campaign Zero)" maxlength="20" style="padding:10px 14px; font-size:13px;"/>
+      </div>
+
+      <button class="ob-google-btn" id="ob-btn-w" style="margin-top:4px;">
+        <svg viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        <span id="btn-w-label">Connect second account (optional)</span>
+        <span class="ob-check" id="check-w" style="display:none">✓</span>
+      </button>
+      <div id="nick-w-row" style="display:none; margin-top:6px; margin-bottom:4px;">
+        <input class="ob-inp" id="nick-w" placeholder="Nickname (e.g. Personal, Work, Campaign Zero)" maxlength="20" style="padding:10px 14px; font-size:13px;"/>
+      </div>
+
+      <button class="ob-btn" id="ob-step3-continue-btn" style="margin-top:12px;">Continue →</button>
+      <button class="ob-skip" id="ob-step3-skip">Skip — use without Google</button>
+    </div>
+
+    <div class="ob-step" id="ob-4">
+      <div class="ob-step-num">Step 4 of 4</div>
+      <div class="ob-heading">One last thing.</div>
+      <div class="ob-sub">Celeste runs on Anthropic's AI. You'll need a free API key — it takes about 30 seconds to get one at <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>.<br><br>Your key is stored only in this browser and sent directly to Anthropic — never anywhere else.</div>
+      <div class="ob-field">
+        <label class="ob-label">Anthropic API key</label>
+        <input id="ob-key" class="ob-inp" type="password" placeholder="sk-ant-..." autocomplete="off"/>
+      </div>
+      <div class="ob-err" id="err-4">Please enter a valid API key.</div>
+      <button class="ob-btn" id="ob-finish-btn">Meet Celeste ✦</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── DASHBOARD ── -->
+<div id="dashboard">
+  <div id="topbar">
+    <div class="tb-left">
+      <span class="tb-logo">Celeste</span>
+      <span class="tb-date" id="tb-date"></span>
+    </div>
+    <div class="tb-right">
+      <div class="mode-toggle">
+        <button class="mode-btn active-p" id="mode-p">Account 1</button>
+        <button class="mode-btn" id="mode-w">Account 2</button>
+      </div>
+      <div class="cal-filter">
+        <button class="cf-btn active" data-view="week">Week</button>
+        <button class="cf-btn" data-view="day">Day</button>
+      </div>
+      <button class="lbtn" id="so-btn">sign out</button>
+    </div>
+  </div>
+  <div id="cal-section"><div id="cal-grid"></div></div>
+  <div id="email-section">
+    <div id="email-header">
+      <span class="email-title">Inbox</span>
+      <button class="email-refresh" id="email-refresh-btn">refresh</button>
+    </div>
+    <div id="email-scroll"><span class="email-loading">Loading...</span></div>
+  </div>
+  <button id="sv-btn">
+    <span class="sv-btn-icon">✦</span>
+    Focus Mode
+  </button>
+  <div id="bottom">
+    <div id="todo-section">
+      <div id="todo-header">
+        <span class="section-title" id="todo-title">Tasks</span>
+        <span class="todo-counts" id="todo-counts">0 left</span>
+      </div>
+      <div id="quick-add">
+        <input id="quick-inp" placeholder="Quick add a task..."/>
+        <button id="quick-add-btn">+ Add</button>
+      </div>
+      <div id="todo-filter">
+        <button class="tf-btn active" data-f="all">All</button>
+        <button class="tf-btn" data-f="today">Today</button>
+        <button class="tf-btn" data-f="high">High</button>
+        <button class="tf-btn" data-f="med">Med</button>
+        <button class="tf-btn" data-f="low">Low</button>
+        <button class="tf-btn" data-f="done">Done</button>
+      </div>
+      <div id="todo-list"></div>
+    </div>
+    <div id="chat-section">
+      <div id="chat-header">
+        <div class="chat-av">C</div>
+        <span class="chat-status" id="chat-status">Celeste — ready</span>
+        <div id="notif-dot"></div>
+      </div>
+      <div id="messages"></div>
+      <div id="composer">
+        <textarea id="msg-inp" rows="1" placeholder="Paste a task list, ask anything..."></textarea>
+        <button id="send-btn"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+var PROXY = "https://cjs-pa.cjmitchell292.workers.dev";
+var CLIENT_ID = "887982151932-95rtd5jkk97ua175n9hjvc5gqg10uaoq.apps.googleusercontent.com";
+var SCOPES = "https://www.googleapis.com/auth/gmail.readonly https://www.googleapis.com/auth/calendar.readonly";
+
+// ── USER PROFILE (set during onboarding) ──
+var profile = { name: "", role: "", context: "", contacts: [], keywords: [], nickP: "Account 1", nickW: "Account 2" };
+
+// ── STATE ──
+var apiKey = "", tokP = "", tokW = "", mode = "p", calView = "week", todoFilter = "all";
+var isBusy = false, notifPermission = false, pollInterval = null;
+var seenEmailIds = new Set(), seenMeetingAlerts = new Set();
+var ws = { p: { tasks: [], history: [] }, w: { tasks: [], history: [] } };
+function T() { return ws[mode].tasks; }
+function H() { return ws[mode].history; }
+
+// ── SYSTEM PROMPT (dynamic based on profile) ──
+function buildSystem() {
+  var contactList = profile.contacts.map(function(c){return "  - "+c.name+" ("+c.role+")";}).join("\n");
+  var kwList = profile.keywords.length ? profile.keywords.join(", ") : "none specified";
+  return "You are Celeste, "+profile.name+"'s personal AI assistant embedded in a productivity dashboard.\n\n"+
+    profile.name+"'s context:\n- "+profile.role+"\n"+(profile.context?"- "+profile.context+"\n":"")+
+    (contactList?"\nKey contacts to watch for:\n"+contactList+"\n":"")+
+    (profile.keywords.length?"\nKeywords to watch for in emails: "+kwList+"\n":"")+
+    "\nTASK PARSING: When "+profile.name+" pastes a list of tasks, respond with:\n<tasks>\n[{\"text\":\"task\",\"project\":\"Project Name\",\"priority\":\"high|med|low\",\"today\":true|false}]\n</tasks>\nThen give a brief summary of your prioritization.\n\n"+
     "TASK COMMANDS: When "+profile.name+" gives a command like \"clear my list\", \"mark X as done\", \"remove X\", respond with:\n<task_command>\n{\"action\":\"clear_all\"|\"clear_done\"|\"mark_done\"|\"remove\"|\"add\",\"target\":\"optional task text\"}\n</task_command>\nThen confirm what you did.\n\n"+
     "Tone: warm, direct, concise. You work for "+profile.name+". Under 120 words unless more is asked. Reference their world naturally.";
 }
@@ -949,7 +1548,7 @@ async function loadEmails(){
 }
 async function fetchEmailCards(token,isWork){
   try{
-    var q=isWork?"is:unread -category:promotions -category:updates":"is:unread -category:promotions -category:updates -category:social -from:noreply -from:no-reply";
+    var q=isWork?"is:unread newer_than:3d -category:promotions -category:updates":"is:unread newer_than:3d -category:promotions -category:updates -category:social -from:noreply -from:no-reply";
     var r=await fetch("https://www.googleapis.com/gmail/v1/users/me/messages?maxResults=15&q="+encodeURIComponent(q),{headers:{Authorization:"Bearer "+token}});
     var d=await r.json();if(!d.messages)return[];
     var cards=await Promise.all(d.messages.slice(0,10).map(async function(m){
@@ -1040,6 +1639,8 @@ function executeTaskCommand(cmd){
   if(action==="clear_all"){ws[mode].tasks=[];resp="Done — task list cleared.";}
   else if(action==="clear_done"){ws[mode].tasks=arr.filter(function(t){return!t.done;});resp="Cleared all completed tasks.";}
   else if(action==="mark_done"){var n=0;arr.forEach(function(t){if(!t.done&&t.text.toLowerCase().includes(target)){t.done=true;n++;}});resp=n?"Marked "+n+" task"+(n>1?"s":"")+" as done.":"Couldn't find a matching task.";}
+  else if(action==="update_priority"){var np2=cmd.priority||"high",nc2=0;arr.forEach(function(t){if(t.text.toLowerCase().includes(target)){t.priority=np2;nc2++;}});resp=nc2?"Updated to "+np2+" priority on "+nc2+" task"+(nc2>1?"s":"")+"." : "Couldn't find a matching task.";}
+  else if(action==="update_project"){var nproj=cmd.project||"General",npc=0;arr.forEach(function(t){if(t.text.toLowerCase().includes(target)){t.project=nproj;npc++;}});resp=npc?"Moved to "+nproj+"." : "Couldn't find a matching task.";}
   else if(action==="remove"){var b=arr.length;ws[mode].tasks=arr.filter(function(t){return!t.text.toLowerCase().includes(target);});var rm=b-ws[mode].tasks.length;resp=rm?"Removed "+rm+" task"+(rm>1?"s":"")+"." : "Couldn't find a matching task.";}
   else if(action==="add"){T().push({id:Date.now(),text:cmd.target,project:cmd.project||"General",priority:cmd.priority||"med",today:cmd.today||false,done:false,note:"",created:new Date().toISOString()});resp="Added to your task list.";}
   saveAll();renderTasks();return resp;

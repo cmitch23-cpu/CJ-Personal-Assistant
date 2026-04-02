@@ -245,6 +245,127 @@ textarea.ob-inp { resize: none; line-height: 1.55; }
 #send-btn { width: 30px; height: 30px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: opacity 0.15s; }
 #send-btn:hover { opacity: 0.85; }
 #send-btn svg { width: 12px; height: 12px; fill: white; }
+
+/* ── SIMPLE VIEW ── */
+#simple-view {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: #080908;
+  z-index: 300;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+#simple-view .sv-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 52px 64px;
+  background: #0f100e;
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 20px;
+  max-width: 560px;
+  width: 90%;
+}
+
+#simple-view .sv-time {
+  font-family: var(--mono);
+  font-size: 72px;
+  font-weight: 500;
+  color: #ffffff;
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin-bottom: 40px;
+  font-variant-numeric: tabular-nums;
+}
+
+#simple-view .sv-label {
+  font-size: 10px;
+  color: var(--text3);
+  font-family: var(--mono);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 14px;
+}
+
+#simple-view .sv-task {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 500;
+  color: var(--accent-l);
+  text-align: center;
+  line-height: 1.4;
+  margin-bottom: 32px;
+}
+
+#simple-view .sv-task.empty {
+  color: var(--text3);
+  font-size: 17px;
+  font-style: italic;
+}
+
+#simple-view .sv-done-btn {
+  padding: 10px 28px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 24px;
+  color: var(--text3);
+  font-family: var(--font);
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+#simple-view .sv-done-btn:hover {
+  border-color: var(--accent-b);
+  color: var(--accent-l);
+  background: var(--accent-dim);
+}
+
+#simple-view .sv-quote {
+  position: absolute;
+  bottom: 40px;
+  font-size: 12px;
+  color: rgba(255,255,255,0.08);
+  font-family: var(--font);
+  font-style: italic;
+  text-align: center;
+  letter-spacing: 0.01em;
+  max-width: 420px;
+  line-height: 1.6;
+  pointer-events: none;
+}
+
+
+#simple-view .sv-why {
+  font-size: 12px;
+  color: var(--text3);
+  font-family: var(--mono);
+  text-align: center;
+  margin-bottom: 24px;
+  margin-top: -16px;
+  min-height: 18px;
+  transition: opacity 0.2s;
+  font-style: italic;
+}
+
+#simple-view .sv-exit {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  font-size: 11px;
+  color: rgba(255,255,255,0.12);
+  font-family: var(--mono);
+  cursor: pointer;
+  background: none;
+  border: none;
+  transition: color 0.2s;
+  letter-spacing: 0.05em;
+}
+#simple-view .sv-exit:hover { color: var(--text3); }
+
 </style>
 </head>
 <body>
@@ -371,6 +492,7 @@ textarea.ob-inp { resize: none; line-height: 1.55; }
         <button class="cf-btn active" data-view="week">Week</button>
         <button class="cf-btn" data-view="day">Day</button>
       </div>
+      <button class="lbtn" id="sv-btn" style="color:var(--accent-l);">focus</button>
       <button class="lbtn" id="so-btn">sign out</button>
     </div>
   </div>
@@ -1030,8 +1152,148 @@ function attachOnboardingListeners() {
   if (obname) obname.addEventListener("keydown", function(e){ if(e.key==="Enter") document.getElementById("ob-role").focus(); });
 }
 
+
+// ── SIMPLE VIEW ──
+var svInterval = null;
+var svTaskIndex = 0;
+var svTasks = [];
+var svCurrentWhy = "";
+
+async function openSimpleView() {
+  svTasks = getSimpleTasks();
+  svTaskIndex = 0;
+  document.getElementById("simple-view").style.display = "flex";
+  updateSvTime();
+  svInterval = setInterval(updateSvTime, 1000);
+  document.addEventListener("keydown", svKeyHandler);
+  // Show loading state
+  var el = document.getElementById("sv-task");
+  el.className = "sv-task empty";
+  el.textContent = "Thinking...";
+  document.getElementById("sv-done-btn").style.display = "none";
+  document.getElementById("sv-why").textContent = "";
+  // Let Celeste pick the simplest task
+  if (svTasks.length > 0 && apiKey) {
+    var picked = await celestePickTask(svTasks);
+    if (picked) {
+      svTaskIndex = svTasks.findIndex(function(t) { return t.id === picked.id; });
+      if (svTaskIndex < 0) svTaskIndex = 0;
+      svCurrentWhy = picked.why || "";
+    }
+  }
+  showSvTask();
+}
+
+function closeSimpleView() {
+  document.getElementById("simple-view").style.display = "none";
+  if (svInterval) clearInterval(svInterval);
+  document.removeEventListener("keydown", svKeyHandler);
+}
+
+function svKeyHandler(e) {
+  if (e.key === "Escape") closeSimpleView();
+}
+
+function updateSvTime() {
+  var now = new Date();
+  var h = now.getHours() % 12 || 12;
+  var m = now.getMinutes().toString().padStart(2, "0");
+  document.getElementById("sv-time").textContent = h + ":" + m;
+}
+
+function getSimpleTasks() {
+  var all = (ws.p.tasks || []).concat(ws.w.tasks || []).filter(function(t) { return !t.done; });
+  return all;
+}
+
+async function celestePickTask(tasks) {
+  try {
+    var list = tasks.map(function(t, i) { return (i+1) + ". " + t.text + " [" + t.priority + " priority]"; }).join("\n");
+    var res = await fetch(PROXY, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 80,
+        system: "You pick the single most actionable, quick task from a list. Reply ONLY with valid JSON: {\"index\": 1, \"why\": \"one short reason (under 8 words)\"} — index is 1-based.",
+        messages: [{ role: "user", content: "Pick the simplest, most immediately actionable task to knock out first. Favor tasks with a clear single action, short time to complete, and no dependencies.\n\nTasks:\n" + list }]
+      })
+    });
+    var data = await res.json();
+    var raw = (data.content || []).filter(function(b) { return b.type === "text"; }).map(function(b) { return b.text; }).join("").trim();
+    var parsed = JSON.parse(raw);
+    var idx = (parsed.index || 1) - 1;
+    if (idx < 0 || idx >= tasks.length) idx = 0;
+    return { id: tasks[idx].id, why: parsed.why || "" };
+  } catch(e) {
+    return tasks.length ? { id: tasks[0].id, why: "" } : null;
+  }
+}
+
+function showSvTask() {
+  var el = document.getElementById("sv-task");
+  var why = document.getElementById("sv-why");
+  if (!svTasks.length) {
+    el.className = "sv-task empty";
+    el.textContent = "You\'re all caught up.";
+    if (why) why.textContent = "";
+    document.getElementById("sv-done-btn").style.display = "none";
+    return;
+  }
+  if (svTaskIndex >= svTasks.length) svTaskIndex = 0;
+  var task = svTasks[svTaskIndex];
+  el.className = "sv-task";
+  el.textContent = task.text;
+  if (why) why.textContent = svCurrentWhy || "";
+  document.getElementById("sv-done-btn").style.display = "inline-block";
+}
+
+async function completeSvTask() {
+  if (!svTasks.length) return;
+  var task = svTasks[svTaskIndex];
+  [ws.p.tasks, ws.w.tasks].forEach(function(arr) {
+    arr.forEach(function(t) { if (t.id === task.id) t.done = true; });
+  });
+  saveAll(); renderTasks();
+  svTasks = getSimpleTasks();
+  svCurrentWhy = "";
+  // Fade out
+  var el = document.getElementById("sv-task");
+  var why = document.getElementById("sv-why");
+  el.style.opacity = "0"; el.style.transform = "translateY(8px)"; el.style.transition = "opacity 0.2s, transform 0.2s";
+  if (why) { why.style.opacity = "0"; why.style.transition = "opacity 0.2s"; }
+  // Ask Celeste to pick next
+  if (svTasks.length > 0 && apiKey) {
+    var picked = await celestePickTask(svTasks);
+    if (picked) {
+      svTaskIndex = svTasks.findIndex(function(t) { return t.id === picked.id; });
+      if (svTaskIndex < 0) svTaskIndex = 0;
+      svCurrentWhy = picked.why || "";
+    }
+  } else { svTaskIndex = 0; }
+  setTimeout(function() {
+    showSvTask();
+    el.style.opacity = "1"; el.style.transform = "translateY(0)";
+    if (why) why.style.opacity = "1";
+  }, 220);
+}
+
 attachOnboardingListeners();
 init();
 </script>
+
+<!-- ── SIMPLE VIEW ── -->
+<div id="simple-view">
+  <button class="sv-exit" id="sv-exit-btn">ESC</button>
+  <div class="sv-card">
+    <div class="sv-time" id="sv-time">00:00</div>
+    <div class="sv-label">Next right thing</div>
+    <div class="sv-task" id="sv-task">Loading...</div>
+    <div class="sv-why" id="sv-why"></div>
+    <button class="sv-done-btn" id="sv-done-btn">Done ✓</button>
+  </div>
+  <div class="sv-quote">When you don't know the next right thing, do the Next Thing Right.</div>
+</div>
+
 </body>
 </html>
